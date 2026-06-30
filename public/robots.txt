@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://decision-delight-draw.lovable.app/sitemap.xml
