@@ -89,6 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Decision Spin is a mobile-first web app that uses a playful raffle animation to help users choose between multiple options." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/59c58008-3fb3-460c-9518-caa285a7c008/id-preview-511ef318--b68e0435-ccfb-469b-a9eb-cda0bb081d02.lovable.app-1782742565006.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/59c58008-3fb3-460c-9518-caa285a7c008/id-preview-511ef318--b68e0435-ccfb-469b-a9eb-cda0bb081d02.lovable.app-1782742565006.png" },
+      { name: "google-site-verification", content: "JtVEFhQClZdEuCtS_4D29r8f1BqpLKJPo9q2OANNARk" },
     ],
     links: [
       {
