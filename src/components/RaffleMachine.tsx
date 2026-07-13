@@ -232,35 +232,91 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       ctx.save();
       ctx.translate(shakeX, shakeY);
 
-      const grad = ctx.createRadialGradient(cx, cy - chamberR * 0.4, chamberR * 0.2, cx, cy, chamberR);
-      grad.addColorStop(0, "rgba(255,255,255,0.35)");
-      grad.addColorStop(1, "rgba(255,255,255,0.05)");
+      // glass drum — outer soft glow
+      const glow = ctx.createRadialGradient(cx, cy, chamberR * 0.6, cx, cy, chamberR * 1.15);
+      glow.addColorStop(0, "rgba(255,255,255,0.0)");
+      glow.addColorStop(1, "rgba(255,255,255,0.12)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, chamberR * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // glass body
+      const grad = ctx.createRadialGradient(cx - chamberR * 0.3, cy - chamberR * 0.4, chamberR * 0.1, cx, cy, chamberR);
+      grad.addColorStop(0, "rgba(255,255,255,0.4)");
+      grad.addColorStop(0.65, "rgba(255,255,255,0.08)");
+      grad.addColorStop(1, "rgba(255,255,255,0.02)");
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(cx, cy, chamberR, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(255,255,255,0.4)";
-      ctx.lineWidth = 4;
+      // rim
+      ctx.strokeStyle = "rgba(255,255,255,0.45)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(0,0,0,0.15)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, chamberR - 2, 0, Math.PI * 2);
       ctx.stroke();
 
-      // balls — glossy dragon-ball style
+      // balls — glossy 3D spheres
       arr.forEach((b, idx) => {
         ctx.save();
-        // sphere body with radial gradient
-        const bg = ctx.createRadialGradient(b.x - b.r * 0.45, b.y - b.r * 0.5, b.r * 0.05, b.x, b.y, b.r);
-        bg.addColorStop(0, "rgba(255,255,255,0.85)");
-        bg.addColorStop(0.12, b.color);
-        bg.addColorStop(0.7, b.color);
-        bg.addColorStop(1, b.dark);
+
+        // contact shadow under ball
+        ctx.beginPath();
+        ctx.ellipse(b.x, b.y + b.r * 0.85, b.r * 0.7, b.r * 0.18, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(0,0,0,0.28)";
+        ctx.filter = "blur(4px)";
+        ctx.fill();
+        ctx.filter = "none";
+
+        // main sphere with deep radial shading
+        const bg = ctx.createRadialGradient(
+          b.x - b.r * 0.4, b.y - b.r * 0.45, b.r * 0.05,
+          b.x + b.r * 0.15, b.y + b.r * 0.15, b.r * 1.1
+        );
+        bg.addColorStop(0, "rgba(255,255,255,0.95)");
+        bg.addColorStop(0.08, b.color);
+        bg.addColorStop(0.55, b.color);
+        bg.addColorStop(0.88, b.dark);
+        bg.addColorStop(1, "#000");
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.fillStyle = bg;
         ctx.fill();
 
+        // rim / terminator darkening (Fresnel-ish)
+        const rim = ctx.createRadialGradient(b.x, b.y, b.r * 0.75, b.x, b.y, b.r);
+        rim.addColorStop(0, "rgba(0,0,0,0)");
+        rim.addColorStop(1, "rgba(0,0,0,0.45)");
+        ctx.fillStyle = rim;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // rim light bottom-right (reflected environment)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.clip();
+        const rimLight = ctx.createRadialGradient(
+          b.x + b.r * 0.65, b.y + b.r * 0.6, b.r * 0.05,
+          b.x + b.r * 0.4, b.y + b.r * 0.35, b.r * 0.9
+        );
+        rimLight.addColorStop(0, "rgba(255,255,255,0.35)");
+        rimLight.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = rimLight;
+        ctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
+        ctx.restore();
+
         // subtle outer ring
-        ctx.strokeStyle = "rgba(0,0,0,0.25)";
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
         ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.stroke();
 
         // central white disc
@@ -272,11 +328,14 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
         discGrad.addColorStop(1, "#e8ddd2");
         ctx.fillStyle = discGrad;
         ctx.fill();
+        ctx.strokeStyle = "rgba(0,0,0,0.2)";
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
 
-        // star or number, or label fallback
+        // star or number
         if (numbered) {
           ctx.fillStyle = b.dark;
-          ctx.font = `800 ${discR * 1.1}px Plus Jakarta Sans, sans-serif`;
+          ctx.font = `800 ${discR * 1.1}px "Space Grotesk", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(String(idx + 1), b.x, b.y + 1);
@@ -284,33 +343,54 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           drawStar(ctx, b.x, b.y, discR * 0.78, b.dark);
         }
 
-        // top-left highlight for gloss
+        // primary specular highlight (bright top-left)
+        const hi = ctx.createRadialGradient(
+          b.x - b.r * 0.4, b.y - b.r * 0.5, 0,
+          b.x - b.r * 0.4, b.y - b.r * 0.5, b.r * 0.55
+        );
+        hi.addColorStop(0, "rgba(255,255,255,0.95)");
+        hi.addColorStop(0.4, "rgba(255,255,255,0.3)");
+        hi.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = hi;
         ctx.beginPath();
-        ctx.ellipse(b.x - b.r * 0.35, b.y - b.r * 0.45, b.r * 0.3, b.r * 0.15, -0.5, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.45)";
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // tiny pinpoint spec
+        ctx.beginPath();
+        ctx.arc(b.x - b.r * 0.42, b.y - b.r * 0.5, b.r * 0.09, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
         ctx.fill();
 
         // label below the ball
         if (b.label) {
           ctx.fillStyle = "rgba(255,255,255,0.95)";
-          ctx.font = `700 ${Math.max(9, b.r * 0.3)}px Plus Jakarta Sans, sans-serif`;
+          ctx.font = `700 ${Math.max(9, b.r * 0.3)}px "Space Grotesk", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "top";
-          ctx.shadowColor = "rgba(0,0,0,0.6)";
+          ctx.shadowColor = "rgba(0,0,0,0.7)";
           ctx.shadowBlur = 4;
           const lbl = b.label.length > 10 ? b.label.slice(0, 9) + "…" : b.label;
-          ctx.fillText(lbl, b.x, b.y + b.r + 2);
+          ctx.fillText(lbl, b.x, b.y + b.r + 3);
           ctx.shadowBlur = 0;
         }
         ctx.restore();
       });
 
+      // drum top glare
       ctx.beginPath();
-      ctx.ellipse(cx - chamberR * 0.3, cy - chamberR * 0.4, chamberR * 0.35, chamberR * 0.18, -0.4, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.ellipse(cx - chamberR * 0.32, cy - chamberR * 0.45, chamberR * 0.38, chamberR * 0.14, -0.4, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.28)";
+      ctx.fill();
+
+      // secondary small glare
+      ctx.beginPath();
+      ctx.ellipse(cx + chamberR * 0.35, cy - chamberR * 0.15, chamberR * 0.08, chamberR * 0.04, -0.4, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.35)";
       ctx.fill();
 
       ctx.restore();
+
 
       rafRef.current = requestAnimationFrame(tick);
     };
