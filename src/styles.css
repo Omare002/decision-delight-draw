@@ -39,70 +39,71 @@
 /* LIGHT — Vintage Bloom: warm cream paper, mustard, coffee brown */
 :root {
   --radius: 1.25rem;
-  --background: oklch(0.93 0.045 78);           /* aged cream */
-  --foreground: oklch(0.28 0.08 55);            /* deep coffee */
-  --card: oklch(0.96 0.035 82);
-  --card-foreground: oklch(0.28 0.08 55);
-  --popover: oklch(0.96 0.035 82);
-  --popover-foreground: oklch(0.28 0.08 55);
-  --primary: oklch(0.55 0.14 55);               /* coffee brown */
-  --primary-foreground: oklch(0.96 0.04 85);
-  --secondary: oklch(0.88 0.09 85);
-  --secondary-foreground: oklch(0.3 0.09 55);
-  --muted: oklch(0.9 0.04 80);
-  --muted-foreground: oklch(0.48 0.09 55);
-  --accent: oklch(0.78 0.17 78);                /* mustard */
-  --accent-foreground: oklch(0.28 0.08 55);
-  --destructive: oklch(0.55 0.2 30);
+  /* Warm dusty sunset paper */
+  --background: oklch(0.9 0.05 55);
+  --foreground: oklch(0.24 0.06 40);
+  --card: oklch(0.94 0.045 60);
+  --card-foreground: oklch(0.24 0.06 40);
+  --popover: oklch(0.94 0.045 60);
+  --popover-foreground: oklch(0.24 0.06 40);
+  --primary: oklch(0.58 0.19 25);               /* sunset coral */
+  --primary-foreground: oklch(0.97 0.02 60);
+  --secondary: oklch(0.86 0.08 45);
+  --secondary-foreground: oklch(0.28 0.08 40);
+  --muted: oklch(0.86 0.05 55);
+  --muted-foreground: oklch(0.45 0.08 35);
+  --accent: oklch(0.72 0.2 35);                 /* burnt amber */
+  --accent-foreground: oklch(0.22 0.06 40);
+  --destructive: oklch(0.55 0.22 20);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.55 0.14 55 / 0.25);
-  --input: oklch(0.9 0.04 80);
-  --ring: oklch(0.55 0.14 55);
+  --border: oklch(0.4 0.12 30 / 0.3);
+  --input: oklch(0.88 0.05 55);
+  --ring: oklch(0.58 0.19 25);
 
-  /* Retro paper background: cream base + subtle grain + faint sparkles */
+  /* Retro wallpaper background — warm overlay for legibility */
+  --hero-image: url("/__l5e/assets-v1/29741da6-167f-41e2-b1d6-7caf20ef56eb/retro-bg.jpg");
   --gradient-hero:
-    radial-gradient(circle at 18% 12%, oklch(0.78 0.17 78 / 0.28) 0%, transparent 40%),
-    radial-gradient(circle at 82% 88%, oklch(0.55 0.14 55 / 0.2) 0%, transparent 45%),
-    linear-gradient(180deg, oklch(0.95 0.045 82) 0%, oklch(0.9 0.05 75) 100%);
-  --gradient-machine: linear-gradient(180deg, oklch(0.97 0.03 82 / 0.75), oklch(0.82 0.08 68 / 0.55));
-  --shadow-soft: 0 8px 24px -8px oklch(0.35 0.1 55 / 0.35), 0 2px 0 oklch(0.35 0.1 55 / 0.1);
-  --shadow-glow: 0 0 60px oklch(0.78 0.17 78 / 0.55), 0 0 20px oklch(0.55 0.14 55 / 0.3);
-  --paper-noise: 1;
+    linear-gradient(180deg, oklch(0.96 0.04 60 / 0.72) 0%, oklch(0.88 0.08 40 / 0.62) 100%),
+    var(--hero-image);
+  --gradient-machine: linear-gradient(180deg, oklch(0.97 0.04 55 / 0.7), oklch(0.75 0.1 30 / 0.5));
+  --shadow-soft: 0 8px 24px -8px oklch(0.28 0.08 30 / 0.45), 0 2px 0 oklch(0.28 0.08 30 / 0.15);
+  --shadow-glow: 0 0 60px oklch(0.72 0.24 20 / 0.55), 0 0 20px oklch(0.5 0.2 350 / 0.35);
+  --paper-noise: 0.7;
   --scanlines: 0;
 }
 
-/* DARK — Neon Arcade: deep purple night with hot magenta + cyan */
+/* DARK — Neon-drenched sunset night */
 .dark {
-  --background: oklch(0.14 0.05 300);
-  --foreground: oklch(0.96 0.04 320);
-  --card: oklch(0.2 0.08 300);
-  --card-foreground: oklch(0.96 0.04 320);
-  --popover: oklch(0.2 0.08 300);
-  --popover-foreground: oklch(0.96 0.04 320);
-  --primary: oklch(0.72 0.28 320);              /* neon magenta */
-  --primary-foreground: oklch(0.14 0.05 300);
-  --secondary: oklch(0.28 0.1 295);
-  --secondary-foreground: oklch(0.96 0.04 320);
-  --muted: oklch(0.24 0.08 295);
-  --muted-foreground: oklch(0.78 0.08 310);
-  --accent: oklch(0.82 0.22 200);               /* neon cyan */
-  --accent-foreground: oklch(0.14 0.05 300);
+  --background: oklch(0.14 0.06 320);
+  --foreground: oklch(0.95 0.04 40);
+  --card: oklch(0.2 0.08 320);
+  --card-foreground: oklch(0.95 0.04 40);
+  --popover: oklch(0.2 0.08 320);
+  --popover-foreground: oklch(0.95 0.04 40);
+  --primary: oklch(0.68 0.28 5);                /* hot pink-coral */
+  --primary-foreground: oklch(0.14 0.06 320);
+  --secondary: oklch(0.3 0.1 340);
+  --secondary-foreground: oklch(0.95 0.04 40);
+  --muted: oklch(0.24 0.08 320);
+  --muted-foreground: oklch(0.8 0.08 40);
+  --accent: oklch(0.78 0.2 45);                 /* amber sunset */
+  --accent-foreground: oklch(0.14 0.06 320);
   --destructive: oklch(0.7 0.28 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.72 0.28 320 / 0.3);
-  --input: oklch(0.25 0.09 300);
-  --ring: oklch(0.72 0.28 320);
+  --border: oklch(0.68 0.28 5 / 0.3);
+  --input: oklch(0.25 0.09 320);
+  --ring: oklch(0.68 0.28 5);
 
   --gradient-hero:
-    radial-gradient(circle at 15% 10%, oklch(0.72 0.28 320 / 0.35) 0%, transparent 40%),
-    radial-gradient(circle at 85% 90%, oklch(0.82 0.22 200 / 0.28) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, oklch(0.2 0.1 280) 0%, oklch(0.1 0.04 290) 100%);
-  --gradient-machine: linear-gradient(180deg, oklch(0.3 0.12 300 / 0.55), oklch(0.15 0.06 290 / 0.4));
-  --shadow-soft: 0 10px 40px -10px oklch(0.72 0.28 320 / 0.5);
-  --shadow-glow: 0 0 60px oklch(0.72 0.28 320 / 0.7), 0 0 24px oklch(0.82 0.22 200 / 0.4);
+    linear-gradient(180deg, oklch(0.14 0.08 320 / 0.7) 0%, oklch(0.1 0.06 300 / 0.82) 100%),
+    var(--hero-image);
+  --gradient-machine: linear-gradient(180deg, oklch(0.3 0.12 340 / 0.55), oklch(0.15 0.06 310 / 0.4));
+  --shadow-soft: 0 10px 40px -10px oklch(0.68 0.28 5 / 0.55);
+  --shadow-glow: 0 0 60px oklch(0.68 0.28 5 / 0.7), 0 0 24px oklch(0.78 0.2 45 / 0.4);
   --paper-noise: 0;
   --scanlines: 1;
 }
+
 
 @layer base {
   * {
