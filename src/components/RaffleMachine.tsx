@@ -390,14 +390,7 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       ctx.fill();
 
       ctx.restore();
-      });
 
-      ctx.beginPath();
-      ctx.ellipse(cx - chamberR * 0.3, cy - chamberR * 0.4, chamberR * 0.35, chamberR * 0.18, -0.4, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.18)";
-      ctx.fill();
-
-      ctx.restore();
 
       rafRef.current = requestAnimationFrame(tick);
     };
