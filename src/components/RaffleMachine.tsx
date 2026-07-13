@@ -11,22 +11,24 @@ interface Ball {
   vx: number;
   vy: number;
   r: number;
+  rot: number;    // rotation angle (radians)
+  av: number;     // angular velocity (rad/s scaled per frame)
   isWinner: boolean;
   exiting: boolean;
 }
 
-// Rich, glossy colors inspired by the maroon dragon-ball reference.
-// Each entry: [base color, deeper shadow color]
+// Retro-sunset palette pulled from the VHS wallpaper — coral, magenta, gold, teal, plum
 const BALL_PALETTE: Array<[string, string]> = [
-  ["#7a1f2b", "#3a0d14"], // maroon (reference)
-  ["#1f4d7a", "#0d1f3a"], // deep blue
-  ["#2d6a3f", "#0f2f1c"], // forest green
-  ["#7a5a1f", "#3a2a0d"], // amber bronze
-  ["#5a1f7a", "#28103a"], // royal violet
-  ["#7a1f5a", "#3a0d28"], // berry
-  ["#1f6a7a", "#0d2a3a"], // teal
-  ["#7a4a1f", "#3a200d"], // burnt orange
+  ["#d94a4a", "#4d1616"], // sunset coral
+  ["#d63384", "#3f0f2c"], // neon magenta
+  ["#d69a3c", "#3d2a0a"], // amber gold
+  ["#2f7a8a", "#0e2830"], // dusk teal
+  ["#7a4a9e", "#22143a"], // dusty violet
+  ["#e07a5f", "#3f1a10"], // salmon
+  ["#4fb08a", "#123324"], // mint
+  ["#7a2d5a", "#2a0e1f"], // deep plum
 ];
+
 
 interface Props {
   options: Option[];
