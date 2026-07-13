@@ -145,7 +145,7 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       const rect = canvas.getBoundingClientRect();
       const w = rect.width, h = rect.height;
       const cx = w / 2, cy = h / 2;
-      const chamberR = Math.min(w, h) / 2 - 16;
+      const chamberR = Math.max(20, Math.min(w, h) / 2 - 16);
 
       const st = stateRef.current;
       if (st.spinning) st.t += dt;
@@ -153,42 +153,66 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       const spinning = st.spinning && phase < 1;
 
       const ds = shakeRef.current;
-      const spinForce = spinning ? 0.6 + phase * 0.4 : 0.15;
-      const angle = (now / 1000) * (spinning ? 4 + phase * 6 : 0.6);
-      const gx = Math.cos(angle) * spinForce + (Math.random() - 0.5) * ds * 0.5;
-      const gy = Math.sin(angle) * spinForce + 0.15 + (Math.random() - 0.5) * ds * 0.5;
+      const spinForce = spinning ? 0.55 + phase * 0.55 : 0.14;
+      const drumAng = (now / 1000) * (spinning ? 3.5 + phase * 6 : 0.5);
+      const gx = Math.cos(drumAng) * spinForce + (Math.random() - 0.5) * ds * 0.5;
+      const gy = Math.sin(drumAng) * spinForce + 0.18 + (Math.random() - 0.5) * ds * 0.5;
+
+      const AIR_DAMP = 0.992;
+      const ANG_DAMP = 0.985;
+      const WALL_REST = 0.78;
+      const WALL_FRICTION = 0.22;
+      const BALL_REST = 0.86;
+      const BALL_FRICTION = 0.18;
 
       for (const b of ballsRef.current) {
         if (b.exiting) {
           b.vy -= 0.5;
           b.x += b.vx;
           b.y += b.vy;
+          b.rot += b.av;
           continue;
         }
         b.vx += gx * 0.1;
         b.vy += gy * 0.1;
         if (spinning) {
-          b.vx += (Math.random() - 0.5) * 1.2;
-          b.vy += (Math.random() - 0.5) * 1.2;
+          const k = 1.2 * (1 - phase * 0.6);
+          b.vx += (Math.random() - 0.5) * k;
+          b.vy += (Math.random() - 0.5) * k;
         }
-        b.vx *= 0.985;
-        b.vy *= 0.985;
-        const maxV = spinning ? 16 : 8;
+        b.vx *= AIR_DAMP;
+        b.vy *= AIR_DAMP;
+        b.av *= ANG_DAMP;
+        const maxV = spinning ? 17 : 8;
         const sp = Math.hypot(b.vx, b.vy);
         if (sp > maxV) { b.vx = b.vx / sp * maxV; b.vy = b.vy / sp * maxV; }
         b.x += b.vx;
         b.y += b.vy;
+        b.rot += b.av;
 
+        // Drum wall — normal reflection w/ restitution + tangential friction + spin coupling
         const dx = b.x - cx, dy = b.y - cy;
-        const d = Math.hypot(dx, dy);
+        const d = Math.hypot(dx, dy) || 0.0001;
         const limit = chamberR - b.r;
         if (d > limit) {
           const nx = dx / d, ny = dy / d;
           b.x = cx + nx * limit;
           b.y = cy + ny * limit;
-          const dot = b.vx * nx + b.vy * ny;
-          b.vx -= 2 * dot * nx * 0.85;
-          b.vy -= 2 * dot * ny * 0.85;
+          const vn = b.vx * nx + b.vy * ny;
+          const tx = -ny, ty = nx;
+          let vt = b.vx * tx + b.vy * ty;
+          const surfaceV = b.av * b.r;
+          const slip = vt - surfaceV;
+          const jf = -slip * WALL_FRICTION;
+          vt += jf;
+          b.av += (jf / b.r) * 1.4;
+          const vnNew = -vn * WALL_REST;
+          const jitter = (Math.random() - 0.5) * 0.14;
+          const cs = Math.cos(jitter), sn = Math.sin(jitter);
+          const nvx = vnNew * nx + vt * tx;
+          const nvy = vnNew * ny + vt * ty;
+          b.vx = nvx * cs - nvy * sn;
+          b.vy = nvx * sn + nvy * cs;
         }
       }
 
@@ -203,15 +227,36 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           if (d2 < rs * rs && d2 > 0.01) {
             const d = Math.sqrt(d2);
             const nx = dx / d, ny = dy / d;
+            const tx = -ny, ty = nx;
             const overlap = (rs - d) / 2;
             a.x -= nx * overlap; a.y -= ny * overlap;
             b.x += nx * overlap; b.y += ny * overlap;
-            const dvx = b.vx - a.vx, dvy = b.vy - a.vy;
-            const p = dvx * nx + dvy * ny;
-            if (p < 0) {
-              a.vx += p * nx; a.vy += p * ny;
-              b.vx -= p * nx; b.vy -= p * ny;
+
+            const ma = a.r * a.r, mb = b.r * b.r;
+            const inv = 1 / (ma + mb);
+            const dvn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (dvn < 0) {
+              const jn = -(1 + BALL_REST) * dvn * (ma * mb) * inv;
+              a.vx -= (jn * nx) / ma; a.vy -= (jn * ny) / ma;
+              b.vx += (jn * nx) / mb; b.vy += (jn * ny) / mb;
             }
+            // Tangential friction couples spin between the two balls
+            const contactSurfA = -a.av * a.r;
+            const contactSurfB =  b.av * b.r;
+            const dvt = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty + (contactSurfB - contactSurfA);
+            const jt = -dvt * BALL_FRICTION * (ma * mb) * inv;
+            a.vx -= (jt * tx) / ma; a.vy -= (jt * ty) / ma;
+            b.vx += (jt * tx) / mb; b.vy += (jt * ty) / mb;
+            a.av -= (jt / a.r) * 0.9;
+            b.av += (jt / b.r) * 0.9;
+
+            // Tiny asymmetric deflection so impacts feel varied
+            const jitter = (Math.random() - 0.5) * 0.09;
+            const cs = Math.cos(jitter), sn = Math.sin(jitter);
+            const rax = a.vx, ray = a.vy;
+            a.vx = rax * cs - ray * sn; a.vy = rax * sn + ray * cs;
+            const rbx = b.vx, rby = b.vy;
+            b.vx = rbx * cs + rby * sn; b.vy = -rbx * sn + rby * cs;
           }
         }
       }
@@ -222,6 +267,7 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           wb.exiting = true;
           wb.vx = 0;
           wb.vy = -14;
+          wb.av = (Math.random() - 0.5) * 0.4;
           wb.r *= 1.4;
         }
         if (wb && wb.y + wb.r < -20) {
