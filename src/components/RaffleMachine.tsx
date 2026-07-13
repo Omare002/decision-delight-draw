@@ -383,16 +383,21 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
         ctx.lineWidth = 0.8;
         ctx.stroke();
 
-        // star or number
+        // star or number — rotated with the ball's angular position (visible spin)
+        ctx.save();
+        ctx.translate(b.x, b.y);
+        ctx.rotate(b.rot);
         if (numbered) {
           ctx.fillStyle = b.dark;
           ctx.font = `800 ${discR * 1.1}px "Space Grotesk", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(String(idx + 1), b.x, b.y + 1);
+          ctx.fillText(String(idx + 1), 0, 1);
         } else if (showStar) {
-          drawStar(ctx, b.x, b.y, discR * 0.78, b.dark);
+          drawStar(ctx, 0, 0, discR * 0.78, b.dark);
         }
+        ctx.restore();
+
 
         // primary specular highlight (bright top-left)
         const hi = ctx.createRadialGradient(
