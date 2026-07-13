@@ -93,9 +93,12 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           vx: (Math.random() - 0.5) * 2,
           vy: (Math.random() - 0.5) * 2,
           r: baseR,
+          rot: Math.random() * Math.PI * 2,
+          av: (Math.random() - 0.5) * 0.2,
           isWinner: false,
           exiting: false,
         });
+
       }
     });
     ballsRef.current = ballEntries;
