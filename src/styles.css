@@ -164,8 +164,12 @@
 
 @utility bg-hero {
   background: var(--gradient-hero);
-  background-attachment: fixed;
+  background-size: auto, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-attachment: fixed, fixed;
 }
+
 
 @utility bg-machine {
   background: var(--gradient-machine);
