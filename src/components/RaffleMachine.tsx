@@ -350,17 +350,10 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
         }
       }
 
-      if (!(window as any).__nan) {
-        for (let i = 0; i < n; i++) { const b = arr[i];
-          if (!Number.isFinite(b.x) || !Number.isFinite(b.y) || !Number.isFinite(b.r) || !Number.isFinite(b.vx) || !Number.isFinite(b.av)) {
-            (window as any).__nan = { i, x: b.x, y: b.y, r: b.r, vx: b.vx, vy: b.vy, av: b.av, t: now }; break; } }
-      }
-
       // Winner sequence: gentle rise, then exit through the neck
       let winnerBall: Ball | null = null;
       for (let i = 0; i < n; i++) if (arr[i].isWinner) { winnerBall = arr[i]; break; }
 
-      (window as any).__dbg = { phase, hasWinner: !!winnerBall, rising: winnerBall?.rising, exiting: winnerBall?.exiting, y: winnerBall?.y, cy, chamberR, n, completed: st.completed };
       if (st.spinning && phase >= 1 && winnerBall && !st.completed) {
         if (!winnerBall.rising && !winnerBall.exiting) {
           winnerBall.rising = true;
