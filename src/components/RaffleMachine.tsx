@@ -354,6 +354,7 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       let winnerBall: Ball | null = null;
       for (let i = 0; i < n; i++) if (arr[i].isWinner) { winnerBall = arr[i]; break; }
 
+      (window as any).__dbg = { phase, hasWinner: !!winnerBall, rising: winnerBall?.rising, exiting: winnerBall?.exiting, y: winnerBall?.y, cy, chamberR, n, completed: st.completed };
       if (st.spinning && phase >= 1 && winnerBall && !st.completed) {
         if (!winnerBall.rising && !winnerBall.exiting) {
           winnerBall.rising = true;
