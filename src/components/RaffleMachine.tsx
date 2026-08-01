@@ -250,6 +250,10 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
             continue;
           }
 
+          // Guard against numeric blow-ups: a stuck ball is re-seeded instead of going NaN.
+          if (!Number.isFinite(b.x) || !Number.isFinite(b.y) || !Number.isFinite(b.vx) || !Number.isFinite(b.vy) || !Number.isFinite(b.av)) {
+            b.x = cx; b.y = cy; b.vx = 0; b.vy = 0; b.av = 0; b.rot = 0;
+          }
 
           b.vx += gx * 0.1 * stepScale;
           b.vy += gy * 0.1 * stepScale;
@@ -260,12 +264,14 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           b.vx *= Math.pow(AIR_DAMP, stepScale);
           b.vy *= Math.pow(AIR_DAMP, stepScale);
           b.av *= Math.pow(ANG_DAMP, stepScale);
+          if (b.av > 1.2) b.av = 1.2; else if (b.av < -1.2) b.av = -1.2;
           const maxV = (spinning ? 16 : 8) * (b.r / 24 + 0.5);
           const sp = Math.hypot(b.vx, b.vy);
           if (sp > maxV) { b.vx = (b.vx / sp) * maxV; b.vy = (b.vy / sp) * maxV; }
           b.x += b.vx * stepScale;
           b.y += b.vy * stepScale;
           b.rot += b.av * stepScale;
+
 
           // Drum wall — reflection with restitution, tangential friction and spin coupling
           const dx = b.x - cx, dy = b.y - cy;
