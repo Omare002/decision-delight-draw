@@ -253,7 +253,7 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           // Guard against numeric blow-ups: a stuck ball is re-seeded instead of going NaN.
           if (!Number.isFinite(b.x) || !Number.isFinite(b.y) || !Number.isFinite(b.vx) || !Number.isFinite(b.vy) || !Number.isFinite(b.av) || !Number.isFinite(b.r) || b.r <= 0) {
             if (!Number.isFinite(b.r) || b.r <= 0) b.r = 12;
-            (window as any).__why = (window as any).__why || 'reset';
+            
             b.x = cx; b.y = cy; b.vx = 0; b.vy = 0; b.av = 0; b.rot = 0;
           }
 
