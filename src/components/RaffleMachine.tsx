@@ -3,6 +3,7 @@ import type { Option } from "@/lib/raffle-storage";
 
 interface Ball {
   id: string;
+  optionId: string;
   label: string;
   color: string;
   dark: string;
@@ -11,9 +12,10 @@ interface Ball {
   vx: number;
   vy: number;
   r: number;
-  rot: number;    // rotation angle (radians)
-  av: number;     // angular velocity (rad/s scaled per frame)
+  rot: number;
+  av: number;
   isWinner: boolean;
+  rising: boolean;
   exiting: boolean;
 }
 
@@ -29,6 +31,8 @@ const BALL_PALETTE: Array<[string, string]> = [
   ["#7a2d5a", "#2a0e1f"], // deep plum
 ];
 
+// Hard ceiling on simulated bodies so 100+ options never tank the frame rate.
+const MAX_BALLS = 120;
 
 interface Props {
   options: Option[];
@@ -38,6 +42,11 @@ interface Props {
   shakeIntensity?: number;
   showStar?: boolean;
   numbered?: boolean;
+}
+
+function prefersReducedMotion() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
 function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, outerR: number, fill: string) {
@@ -62,29 +71,48 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
   const containerRef = useRef<HTMLDivElement>(null);
   const ballsRef = useRef<Ball[]>([]);
   const rafRef = useRef<number>(0);
-  const stateRef = useRef({ spinning: false, winner: null as Option | null, t: 0, completed: false });
+  const optionsRef = useRef<Option[]>(options);
+  const stateRef = useRef({ spinning: false, winner: null as Option | null, t: 0, completed: false, zoom: 1 });
   const shakeRef = useRef(0);
+  const completeRef = useRef(onSpinComplete);
+  const reducedRef = useRef(false);
 
-  // Build balls when options change
+  useEffect(() => { completeRef.current = onSpinComplete; }, [onSpinComplete]);
+  useEffect(() => { reducedRef.current = prefersReducedMotion(); }, []);
+  useEffect(() => { shakeRef.current = shakeIntensity; }, [shakeIntensity]);
+
+  // Build balls when options change — sizes adapt to the crowd so nothing overflows.
   useEffect(() => {
+    optionsRef.current = options;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
+    const w = rect.width || 360, h = rect.height || 360;
     const cx = w / 2, cy = h / 2;
-    const chamberR = Math.min(w, h) / 2 - 16;
+    const chamberR = Math.max(40, Math.min(w, h) / 2 - 16);
 
-    const ballEntries: Ball[] = [];
-    options.forEach((opt) => {
-      const copies = Math.max(1, opt.weight);
+    // One body per weight unit, but never more than MAX_BALLS total.
+    const totalUnits = options.reduce((s, o) => s + Math.max(1, o.weight), 0);
+    const scaleDown = totalUnits > MAX_BALLS ? MAX_BALLS / totalUnits : 1;
+
+    const planned: Array<{ opt: Option; copies: number }> = options.map((opt) => ({
+      opt,
+      copies: Math.max(1, Math.round(Math.max(1, opt.weight) * scaleDown)),
+    }));
+    const count = Math.max(1, planned.reduce((s, p) => s + p.copies, 0));
+
+    // Pack ~42% of the chamber area with balls; clamp for readability + stability.
+    const baseR = Math.max(6, Math.min(38, Math.sqrt((chamberR * chamberR * 0.42) / count)));
+
+    const entries: Ball[] = [];
+    planned.forEach(({ opt, copies }) => {
       for (let c = 0; c < copies; c++) {
         const ang = Math.random() * Math.PI * 2;
-        const dist = Math.random() * (chamberR - 40);
-        const totalCount = options.reduce((s, o) => s + Math.max(1, o.weight), 0);
-        const baseR = Math.max(22, Math.min(40, 150 / Math.sqrt(totalCount + 1)));
+        const dist = Math.sqrt(Math.random()) * Math.max(0, chamberR - baseR - 2);
         const [base, dark] = BALL_PALETTE[opt.colorIndex % BALL_PALETTE.length];
-        ballEntries.push({
+        entries.push({
           id: `${opt.id}-${c}`,
+          optionId: opt.id,
           label: opt.label,
           color: base,
           dark,
@@ -96,54 +124,71 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           rot: Math.random() * Math.PI * 2,
           av: (Math.random() - 0.5) * 0.2,
           isWinner: false,
+          rising: false,
           exiting: false,
         });
-
       }
     });
-    ballsRef.current = ballEntries;
+    ballsRef.current = entries;
   }, [options]);
 
   useEffect(() => {
-    stateRef.current.spinning = spinning;
-    stateRef.current.winner = winner;
-    stateRef.current.completed = false;
+    const st = stateRef.current;
+    st.spinning = spinning;
+    st.winner = winner;
+    st.completed = false;
+    st.zoom = 1;
     if (spinning) {
-      stateRef.current.t = 0;
+      st.t = 0;
+      ballsRef.current.forEach(b => { b.isWinner = false; b.rising = false; b.exiting = false; });
       if (winner) {
-        const candidates = ballsRef.current.filter(b => b.id.startsWith(winner.id + "-"));
+        let candidates = ballsRef.current.filter(b => b.optionId === winner.id);
+        // Fallback: if the option somehow has no body, mark any ball so the draw still resolves.
+        if (candidates.length === 0) candidates = ballsRef.current;
         const chosen = candidates[Math.floor(Math.random() * candidates.length)];
-        ballsRef.current.forEach(b => { b.isWinner = b === chosen; });
+        if (chosen) chosen.isWinner = true;
       }
     }
   }, [spinning, winner]);
 
-  useEffect(() => { shakeRef.current = shakeIntensity; }, [shakeIntensity]);
+  // Safety net: the draw always resolves even if the winner body gets stuck.
+  useEffect(() => {
+    if (!spinning) return;
+    const id = window.setTimeout(() => {
+      const st = stateRef.current;
+      if (!st.completed) { st.completed = true; completeRef.current(); }
+    }, 9000);
+    return () => window.clearTimeout(id);
+  }, [spinning]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
-    const ctx = canvas.getContext("2d")!;
-    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext("2d", { alpha: true })!;
+    // Cap DPR — retina phones otherwise push 3x the pixels for no visual gain here.
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
 
     function resize() {
       const rect = canvas!.getBoundingClientRect();
-      canvas!.width = rect.width * dpr;
-      canvas!.height = rect.height * dpr;
+      canvas!.width = Math.max(1, Math.round(rect.width * dpr));
+      canvas!.height = Math.max(1, Math.round(rect.height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     resize();
     window.addEventListener("resize", resize);
 
     let last = performance.now();
-    const DURATION = 4800;
+    const reduced = reducedRef.current;
+    const DURATION = reduced ? 1200 : 4200;
 
     const tick = (now: number) => {
-      const dt = Math.min(40, now - last);
+      rafRef.current = requestAnimationFrame(tick);
+      const dt = Math.min(34, now - last);
       last = now;
       const rect = canvas.getBoundingClientRect();
       const w = rect.width, h = rect.height;
+      if (w < 2 || h < 2) return;
       const cx = w / 2, cy = h / 2;
       const chamberR = Math.max(20, Math.min(w, h) / 2 - 16);
 
@@ -151,141 +196,198 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       if (st.spinning) st.t += dt;
       const phase = st.spinning ? Math.min(1, st.t / DURATION) : 0;
       const spinning = st.spinning && phase < 1;
+      const arr = ballsRef.current;
+      const n = arr.length;
+
+      // Adaptive fidelity: fewer physics substeps when the drum is crowded.
+      const steps = reduced ? 1 : n > 60 ? 1 : n > 24 ? 2 : 3;
+      const stepScale = 1 / steps;
 
       const ds = shakeRef.current;
-      const spinForce = spinning ? 0.55 + phase * 0.55 : 0.14;
-      const drumAng = (now / 1000) * (spinning ? 3.5 + phase * 6 : 0.5);
+      const spinForce = spinning ? 0.5 + phase * 0.5 : 0.12;
+      const drumAng = (now / 1000) * (spinning ? 3.2 + phase * 5 : 0.5);
       const gx = Math.cos(drumAng) * spinForce + (Math.random() - 0.5) * ds * 0.5;
-      const gy = Math.sin(drumAng) * spinForce + 0.18 + (Math.random() - 0.5) * ds * 0.5;
+      const gy = Math.sin(drumAng) * spinForce + 0.2 + (Math.random() - 0.5) * ds * 0.5;
 
       const AIR_DAMP = 0.992;
       const ANG_DAMP = 0.985;
-      const WALL_REST = 0.78;
+      const WALL_REST = 0.72;
       const WALL_FRICTION = 0.22;
-      const BALL_REST = 0.86;
-      const BALL_FRICTION = 0.18;
+      const BALL_REST = 0.8;
+      const BALL_FRICTION = 0.16;
+      const turbulence = spinning && !reduced ? 1.0 * (1 - phase * 0.6) : 0;
 
-      for (const b of ballsRef.current) {
-        if (b.exiting) {
-          b.vy -= 0.5;
-          b.x += b.vx;
-          b.y += b.vy;
-          b.rot += b.av;
-          continue;
-        }
-        b.vx += gx * 0.1;
-        b.vy += gy * 0.1;
-        if (spinning) {
-          const k = 1.2 * (1 - phase * 0.6);
-          b.vx += (Math.random() - 0.5) * k;
-          b.vy += (Math.random() - 0.5) * k;
-        }
-        b.vx *= AIR_DAMP;
-        b.vy *= AIR_DAMP;
-        b.av *= ANG_DAMP;
-        const maxV = spinning ? 17 : 8;
-        const sp = Math.hypot(b.vx, b.vy);
-        if (sp > maxV) { b.vx = b.vx / sp * maxV; b.vy = b.vy / sp * maxV; }
-        b.x += b.vx;
-        b.y += b.vy;
-        b.rot += b.av;
+      // Frame-rate independent factor for the reveal so it never stalls on slow frames.
+      const f = Math.max(0.5, Math.min(2.5, dt / 16.67));
 
-        // Drum wall — normal reflection w/ restitution + tangential friction + spin coupling
-        const dx = b.x - cx, dy = b.y - cy;
-        const d = Math.hypot(dx, dy) || 0.0001;
-        const limit = chamberR - b.r;
-        if (d > limit) {
-          const nx = dx / d, ny = dy / d;
-          b.x = cx + nx * limit;
-          b.y = cy + ny * limit;
-          const vn = b.vx * nx + b.vy * ny;
-          const tx = -ny, ty = nx;
-          let vt = b.vx * tx + b.vy * ty;
-          const surfaceV = b.av * b.r;
-          const slip = vt - surfaceV;
-          const jf = -slip * WALL_FRICTION;
-          vt += jf;
-          b.av += (jf / b.r) * 1.4;
-          const vnNew = -vn * WALL_REST;
-          const jitter = (Math.random() - 0.5) * 0.14;
-          const cs = Math.cos(jitter), sn = Math.sin(jitter);
-          const nvx = vnNew * nx + vt * tx;
-          const nvy = vnNew * ny + vt * ty;
-          b.vx = nvx * cs - nvy * sn;
-          b.vy = nvx * sn + nvy * cs;
-        }
-      }
-
-      const arr = ballsRef.current;
-      for (let i = 0; i < arr.length; i++) {
-        for (let j = i + 1; j < arr.length; j++) {
-          const a = arr[i], b = arr[j];
-          if (a.exiting || b.exiting) continue;
-          const dx = b.x - a.x, dy = b.y - a.y;
-          const d2 = dx * dx + dy * dy;
-          const rs = a.r + b.r;
-          if (d2 < rs * rs && d2 > 0.01) {
-            const d = Math.sqrt(d2);
-            const nx = dx / d, ny = dy / d;
-            const tx = -ny, ty = nx;
-            const overlap = (rs - d) / 2;
-            a.x -= nx * overlap; a.y -= ny * overlap;
-            b.x += nx * overlap; b.y += ny * overlap;
-
-            const ma = a.r * a.r, mb = b.r * b.r;
-            const inv = 1 / (ma + mb);
-            const dvn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-            if (dvn < 0) {
-              const jn = -(1 + BALL_REST) * dvn * (ma * mb) * inv;
-              a.vx -= (jn * nx) / ma; a.vy -= (jn * ny) / ma;
-              b.vx += (jn * nx) / mb; b.vy += (jn * ny) / mb;
+      for (let s = 0; s < steps; s++) {
+        for (let i = 0; i < n; i++) {
+          const b = arr[i];
+          if (b.exiting) {
+            if (s === 0) {
+              b.vy -= 0.45 * f;
+              b.x += b.vx * f;
+              b.y += b.vy * f;
+              b.rot += b.av * f;
             }
-            // Tangential friction couples spin between the two balls
-            const contactSurfA = -a.av * a.r;
-            const contactSurfB =  b.av * b.r;
-            const dvt = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty + (contactSurfB - contactSurfA);
-            const jt = -dvt * BALL_FRICTION * (ma * mb) * inv;
-            a.vx -= (jt * tx) / ma; a.vy -= (jt * ty) / ma;
-            b.vx += (jt * tx) / mb; b.vy += (jt * ty) / mb;
-            a.av -= (jt / a.r) * 0.9;
-            b.av += (jt / b.r) * 0.9;
+            continue;
+          }
+          if (b.rising) {
+            if (s === 0) {
+              b.vx *= Math.pow(0.9, f);
+              b.vy += (-5.2 - b.vy) * Math.min(1, 0.14 * f);
+              b.x += b.vx * f;
+              b.y += b.vy * f;
+              b.rot += b.av * 0.4 * f;
+              const dx0 = b.x - cx, dy0 = b.y - cy;
+              const d0 = Math.hypot(dx0, dy0) || 0.0001;
+              const lim = chamberR - b.r;
+              if (d0 > lim && b.y > cy - chamberR * 0.45) {
+                b.x = cx + (dx0 / d0) * lim;
+                b.y = cy + (dy0 / d0) * lim;
+              }
+            }
+            continue;
+          }
 
-            // Tiny asymmetric deflection so impacts feel varied
-            const jitter = (Math.random() - 0.5) * 0.09;
+
+          b.vx += gx * 0.1 * stepScale;
+          b.vy += gy * 0.1 * stepScale;
+          if (turbulence) {
+            b.vx += (Math.random() - 0.5) * turbulence * stepScale;
+            b.vy += (Math.random() - 0.5) * turbulence * stepScale;
+          }
+          b.vx *= Math.pow(AIR_DAMP, stepScale);
+          b.vy *= Math.pow(AIR_DAMP, stepScale);
+          b.av *= Math.pow(ANG_DAMP, stepScale);
+          const maxV = (spinning ? 16 : 8) * (b.r / 24 + 0.5);
+          const sp = Math.hypot(b.vx, b.vy);
+          if (sp > maxV) { b.vx = (b.vx / sp) * maxV; b.vy = (b.vy / sp) * maxV; }
+          b.x += b.vx * stepScale;
+          b.y += b.vy * stepScale;
+          b.rot += b.av * stepScale;
+
+          // Drum wall — reflection with restitution, tangential friction and spin coupling
+          const dx = b.x - cx, dy = b.y - cy;
+          const d = Math.hypot(dx, dy) || 0.0001;
+          const limit = Math.max(1, chamberR - b.r);
+          if (d > limit) {
+            const nx = dx / d, ny = dy / d;
+            b.x = cx + nx * limit;
+            b.y = cy + ny * limit;
+            const vn = b.vx * nx + b.vy * ny;
+            const tx = -ny, ty = nx;
+            let vt = b.vx * tx + b.vy * ty;
+            const slip = vt - b.av * b.r;
+            const jf = -slip * WALL_FRICTION;
+            vt += jf;
+            b.av += (jf / b.r) * 1.4;
+            const vnNew = -vn * WALL_REST;
+            const jitter = (Math.random() - 0.5) * 0.12;
             const cs = Math.cos(jitter), sn = Math.sin(jitter);
-            const rax = a.vx, ray = a.vy;
-            a.vx = rax * cs - ray * sn; a.vy = rax * sn + ray * cs;
-            const rbx = b.vx, rby = b.vy;
-            b.vx = rbx * cs + rby * sn; b.vy = -rbx * sn + rby * cs;
+            const nvx = vnNew * nx + vt * tx;
+            const nvy = vnNew * ny + vt * ty;
+            b.vx = nvx * cs - nvy * sn;
+            b.vy = nvx * sn + nvy * cs;
+          }
+        }
+
+        // Broad phase: uniform spatial hash → O(n) instead of O(n²)
+        let cell = 0;
+        for (let i = 0; i < n; i++) cell = Math.max(cell, arr[i].r);
+        cell = Math.max(8, cell * 2);
+        const grid = new Map<number, number[]>();
+        const cols = Math.ceil(w / cell) + 2;
+        for (let i = 0; i < n; i++) {
+          const b = arr[i];
+          if (b.exiting || b.rising) continue;
+          const key = (Math.floor(b.y / cell) + 1) * cols + (Math.floor(b.x / cell) + 1);
+          const list = grid.get(key);
+          if (list) list.push(i); else grid.set(key, [i]);
+        }
+
+        for (let i = 0; i < n; i++) {
+          const a = arr[i];
+          if (a.exiting || a.rising) continue;
+          const gxi = Math.floor(a.x / cell) + 1;
+          const gyi = Math.floor(a.y / cell) + 1;
+          for (let oy = -1; oy <= 1; oy++) {
+            for (let ox = -1; ox <= 1; ox++) {
+              const list = grid.get((gyi + oy) * cols + (gxi + ox));
+              if (!list) continue;
+              for (let k = 0; k < list.length; k++) {
+                const j = list[k];
+                if (j <= i) continue;
+                const b = arr[j];
+                const dx = b.x - a.x, dy = b.y - a.y;
+                const rs = a.r + b.r;
+                const d2 = dx * dx + dy * dy;
+                if (d2 >= rs * rs || d2 <= 0.01) continue;
+                const d = Math.sqrt(d2);
+                const nx = dx / d, ny = dy / d;
+                const tx = -ny, ty = nx;
+                const overlap = (rs - d) / 2;
+                a.x -= nx * overlap; a.y -= ny * overlap;
+                b.x += nx * overlap; b.y += ny * overlap;
+
+                const ma = a.r * a.r, mb = b.r * b.r;
+                const inv = 1 / (ma + mb);
+                const dvn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+                if (dvn < 0) {
+                  const jn = -(1 + BALL_REST) * dvn * (ma * mb) * inv;
+                  a.vx -= (jn * nx) / ma; a.vy -= (jn * ny) / ma;
+                  b.vx += (jn * nx) / mb; b.vy += (jn * ny) / mb;
+                }
+                const dvt = (b.vx - a.vx) * tx + (b.vy - a.vy) * ty + (b.av * b.r + a.av * a.r);
+                const jt = -dvt * BALL_FRICTION * (ma * mb) * inv;
+                a.vx -= (jt * tx) / ma; a.vy -= (jt * ty) / ma;
+                b.vx += (jt * tx) / mb; b.vy += (jt * ty) / mb;
+                a.av -= (jt / a.r) * 0.8;
+                b.av += (jt / b.r) * 0.8;
+              }
+            }
           }
         }
       }
 
-      if (st.spinning && phase >= 1 && !st.completed) {
-        const wb = arr.find(b => b.isWinner);
-        if (wb && !wb.exiting) {
-          wb.exiting = true;
-          wb.vx = 0;
-          wb.vy = -14;
-          wb.av = (Math.random() - 0.5) * 0.4;
-          wb.r *= 1.4;
+      // Winner sequence: gentle rise, then exit through the neck
+      let winnerBall: Ball | null = null;
+      for (let i = 0; i < n; i++) if (arr[i].isWinner) { winnerBall = arr[i]; break; }
+
+      if (st.spinning && phase >= 1 && winnerBall && !st.completed) {
+        if (!winnerBall.rising && !winnerBall.exiting) {
+          winnerBall.rising = true;
+          winnerBall.av *= 0.3;
         }
-        if (wb && wb.y + wb.r < -20) {
+        if (winnerBall.rising && winnerBall.y < cy - chamberR * 0.55) {
+          winnerBall.rising = false;
+          winnerBall.exiting = true;
+          winnerBall.vx = (cx - winnerBall.x) * 0.05;
+          winnerBall.vy = -9;
+        }
+        if (winnerBall.exiting && winnerBall.y + winnerBall.r < -24) {
           st.completed = true;
-          onSpinComplete();
+          completeRef.current();
         }
       }
 
-      // draw
-      ctx.clearRect(0, 0, w, h);
-      const shakeX = (Math.random() - 0.5) * (spinning ? 4 + ds * 8 : ds * 6);
-      const shakeY = (Math.random() - 0.5) * (spinning ? 4 + ds * 8 : ds * 6);
-      ctx.save();
-      ctx.translate(shakeX, shakeY);
+      // Gentle camera zoom during the final beat of the draw
+      const targetZoom = reduced ? 1 : st.spinning ? (phase > 0.55 ? 1 + (phase - 0.55) * 0.22 : 1) : 1;
+      st.zoom += (targetZoom - st.zoom) * 0.06;
 
-      // glass drum — outer soft glow
+      // ---- draw ----
+      ctx.clearRect(0, 0, w, h);
+      const shakeAmp = reduced ? 0 : spinning ? 3 + ds * 6 : ds * 5;
+      const shakeX = (Math.random() - 0.5) * shakeAmp;
+      const shakeY = (Math.random() - 0.5) * shakeAmp;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(st.zoom, st.zoom);
+      ctx.translate(-cx + shakeX, -cy + shakeY);
+
+      // outer soft glow
       const glow = ctx.createRadialGradient(cx, cy, chamberR * 0.6, cx, cy, chamberR * 1.15);
-      glow.addColorStop(0, "rgba(255,255,255,0.0)");
+      glow.addColorStop(0, "rgba(255,255,255,0)");
       glow.addColorStop(1, "rgba(255,255,255,0.12)");
       ctx.fillStyle = glow;
       ctx.beginPath();
@@ -312,19 +414,21 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       ctx.arc(cx, cy, chamberR - 2, 0, Math.PI * 2);
       ctx.stroke();
 
-      // balls — glossy 3D spheres
-      arr.forEach((b, idx) => {
+      // detail budget — drop the expensive passes when the drum is packed
+      const rich = n <= 40;
+      const showLabels = arr.length > 0 && arr[0].r >= 20 && n <= 24;
+
+      for (let idx = 0; idx < n; idx++) {
+        const b = arr[idx];
         ctx.save();
 
-        // contact shadow under ball
-        ctx.beginPath();
-        ctx.ellipse(b.x, b.y + b.r * 0.85, b.r * 0.7, b.r * 0.18, 0, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(0,0,0,0.28)";
-        ctx.filter = "blur(4px)";
-        ctx.fill();
-        ctx.filter = "none";
+        if (rich) {
+          ctx.beginPath();
+          ctx.ellipse(b.x, b.y + b.r * 0.85, b.r * 0.7, b.r * 0.18, 0, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(0,0,0,0.24)";
+          ctx.fill();
+        }
 
-        // main sphere with deep radial shading
         const bg = ctx.createRadialGradient(
           b.x - b.r * 0.4, b.y - b.r * 0.45, b.r * 0.05,
           b.x + b.r * 0.15, b.y + b.r * 0.15, b.r * 1.1
@@ -339,87 +443,62 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
         ctx.fillStyle = bg;
         ctx.fill();
 
-        // rim / terminator darkening (Fresnel-ish)
-        const rim = ctx.createRadialGradient(b.x, b.y, b.r * 0.75, b.x, b.y, b.r);
-        rim.addColorStop(0, "rgba(0,0,0,0)");
-        rim.addColorStop(1, "rgba(0,0,0,0.45)");
-        ctx.fillStyle = rim;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.fill();
+        if (rich) {
+          const rim = ctx.createRadialGradient(b.x, b.y, b.r * 0.75, b.x, b.y, b.r);
+          rim.addColorStop(0, "rgba(0,0,0,0)");
+          rim.addColorStop(1, "rgba(0,0,0,0.45)");
+          ctx.fillStyle = rim;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-        // rim light bottom-right (reflected environment)
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-        ctx.clip();
-        const rimLight = ctx.createRadialGradient(
-          b.x + b.r * 0.65, b.y + b.r * 0.6, b.r * 0.05,
-          b.x + b.r * 0.4, b.y + b.r * 0.35, b.r * 0.9
-        );
-        rimLight.addColorStop(0, "rgba(255,255,255,0.35)");
-        rimLight.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = rimLight;
-        ctx.fillRect(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
-        ctx.restore();
-
-        // subtle outer ring
         ctx.strokeStyle = "rgba(0,0,0,0.35)";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.stroke();
 
-        // central white disc
+        // central disc + emblem
         const discR = b.r * 0.5;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, discR, 0, Math.PI * 2);
-        const discGrad = ctx.createRadialGradient(b.x - discR * 0.3, b.y - discR * 0.4, discR * 0.1, b.x, b.y, discR);
-        discGrad.addColorStop(0, "#fff");
-        discGrad.addColorStop(1, "#e8ddd2");
-        ctx.fillStyle = discGrad;
-        ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.2)";
-        ctx.lineWidth = 0.8;
-        ctx.stroke();
+        if (discR > 3) {
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, discR, 0, Math.PI * 2);
+          const discGrad = ctx.createRadialGradient(b.x - discR * 0.3, b.y - discR * 0.4, discR * 0.1, b.x, b.y, discR);
+          discGrad.addColorStop(0, "#fff");
+          discGrad.addColorStop(1, "#e8ddd2");
+          ctx.fillStyle = discGrad;
+          ctx.fill();
 
-        // star or number — rotated with the ball's angular position (visible spin)
-        ctx.save();
-        ctx.translate(b.x, b.y);
-        ctx.rotate(b.rot);
-        if (numbered) {
-          ctx.fillStyle = b.dark;
-          ctx.font = `800 ${discR * 1.1}px "Space Grotesk", sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(String(idx + 1), 0, 1);
-        } else if (showStar) {
-          drawStar(ctx, 0, 0, discR * 0.78, b.dark);
+          ctx.save();
+          ctx.translate(b.x, b.y);
+          ctx.rotate(b.rot);
+          if (numbered) {
+            ctx.fillStyle = b.dark;
+            ctx.font = `800 ${discR * 1.1}px "Space Grotesk", sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(String(idx + 1), 0, 1);
+          } else if (showStar) {
+            drawStar(ctx, 0, 0, discR * 0.78, b.dark);
+          }
+          ctx.restore();
         }
-        ctx.restore();
 
-
-        // primary specular highlight (bright top-left)
+        // specular highlight
         const hi = ctx.createRadialGradient(
           b.x - b.r * 0.4, b.y - b.r * 0.5, 0,
           b.x - b.r * 0.4, b.y - b.r * 0.5, b.r * 0.55
         );
-        hi.addColorStop(0, "rgba(255,255,255,0.95)");
-        hi.addColorStop(0.4, "rgba(255,255,255,0.3)");
+        hi.addColorStop(0, "rgba(255,255,255,0.9)");
+        hi.addColorStop(0.4, "rgba(255,255,255,0.28)");
         hi.addColorStop(1, "rgba(255,255,255,0)");
         ctx.fillStyle = hi;
         ctx.beginPath();
         ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
         ctx.fill();
 
-        // tiny pinpoint spec
-        ctx.beginPath();
-        ctx.arc(b.x - b.r * 0.42, b.y - b.r * 0.5, b.r * 0.09, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,255,255,0.95)";
-        ctx.fill();
-
-        // label below the ball
-        if (b.label) {
+        if (showLabels && b.label) {
           ctx.fillStyle = "rgba(255,255,255,0.95)";
           ctx.font = `700 ${Math.max(9, b.r * 0.3)}px "Space Grotesk", sans-serif`;
           ctx.textAlign = "center";
@@ -431,31 +510,26 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
           ctx.shadowBlur = 0;
         }
         ctx.restore();
-      });
+      }
 
-      // drum top glare
+      // drum glare
       ctx.beginPath();
       ctx.ellipse(cx - chamberR * 0.32, cy - chamberR * 0.45, chamberR * 0.38, chamberR * 0.14, -0.4, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.28)";
+      ctx.fillStyle = "rgba(255,255,255,0.24)";
       ctx.fill();
-
-      // secondary small glare
       ctx.beginPath();
       ctx.ellipse(cx + chamberR * 0.35, cy - chamberR * 0.15, chamberR * 0.08, chamberR * 0.04, -0.4, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
+      ctx.fillStyle = "rgba(255,255,255,0.32)";
       ctx.fill();
 
       ctx.restore();
-
-
-      rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, [onSpinComplete, showStar, numbered]);
+  }, [showStar, numbered]);
 
   return (
     <div ref={containerRef} className="relative aspect-square w-full max-w-md mx-auto">

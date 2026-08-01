@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Plus, Trash2, X, Volume2, VolumeX, Sun, Moon, BarChart3, Sparkles,
-  RotateCcw, Check, Smartphone, Minus, ArrowLeft, Timer, Shuffle, ListOrdered,
+  RotateCcw, Check, Smartphone, Minus, ArrowLeft, Timer, Shuffle, ListOrdered, Share2,
 } from "lucide-react";
 import { RaffleMachine, StaticBall } from "@/components/RaffleMachine";
 import {
@@ -459,8 +459,9 @@ function Compose(props: {
         )}
       </AnimatePresence>
 
-      {/* Visual balls */}
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-4">
+      {/* Visual balls — list scrolls, machine stays fixed */}
+      <div className="flex max-h-[42vh] flex-wrap items-end gap-x-3 gap-y-4 overflow-y-auto overscroll-contain pr-1">
+
         <AnimatePresence>
           {options.map((o, i) => {
             const pct = Math.round((Math.max(1, o.weight) / totalWeight) * 100);
@@ -604,31 +605,93 @@ function Winner({ winner, mode, category, feedback, setFeedback, onAccept, onRed
 }) {
   const isPlayers = category === "players";
   const isProductivity = mode === "productivity" || category === "productivity";
+  const [shared, setShared] = useState(false);
+
+  async function share() {
+    const text = isPlayers
+      ? `${winner.label} plays first! — decided with spinit`
+      : `spinit picked: ${winner.label}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "spinit", text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        setShared(true);
+        setTimeout(() => setShared(false), 1800);
+      }
+    } catch { /* user dismissed */ }
+  }
+
+  const spring = { type: "spring" as const, stiffness: 220, damping: 24 };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-      className="relative space-y-6 pt-8 text-center"
+      initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+      transition={spring}
+      className="relative flex min-h-[70vh] flex-col justify-center space-y-7 pt-6 text-center"
     >
       <Confetti />
-      <p className="text-sm uppercase tracking-widest text-muted-foreground">🎉 {isPlayers ? "Goes first" : "Your decision"}</p>
-      <motion.div
-        initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15 }}
-        className="mx-auto w-fit"
-      >
-        <StaticBall colorIndex={winner.colorIndex} size={160} showLabel={false} />
-      </motion.div>
-      <h1 className="font-display text-4xl font-bold leading-tight">
-        {winner.label}{isPlayers ? " plays first!" : ""}
-      </h1>
+
+      <div className="space-y-5">
+        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          {isPlayers ? "Goes first" : "Your decision"}
+        </p>
+        <motion.div
+          initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          transition={{ ...spring, delay: 0.05 }}
+          className="mx-auto w-fit"
+        >
+          <StaticBall colorIndex={winner.colorIndex} size={152} showLabel={false} />
+        </motion.div>
+        <motion.h1
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ ...spring, delay: 0.15 }}
+          className="font-display text-4xl font-bold leading-tight"
+        >
+          {winner.label}{isPlayers ? " plays first!" : ""}
+        </motion.h1>
+      </div>
 
       {isProductivity && <ProductivityTimer />}
 
       <motion.div
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-        className="space-y-3 pt-2"
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ ...spring, delay: 0.25 }}
+        className="space-y-2"
       >
-        <p className="text-sm text-muted-foreground">How do you feel about this result?</p>
+        <button onClick={onAccept}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-base font-semibold text-primary-foreground shadow-glow transition active:scale-[0.98]">
+          <Check className="h-4 w-4" /> Accept
+        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={onRedraw}
+            className="inline-flex items-center justify-center gap-2 rounded-full glass-strong py-3.5 text-sm font-semibold shadow-soft transition active:scale-[0.98]">
+            <RotateCcw className="h-4 w-4" /> Draw again
+          </button>
+          <button onClick={share}
+            className="inline-flex items-center justify-center gap-2 rounded-full glass-strong py-3.5 text-sm font-semibold shadow-soft transition active:scale-[0.98]">
+            <Share2 className="h-4 w-4" /> {shared ? "Copied" : "Share result"}
+          </button>
+        </div>
+        {isPlayers && (
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={onPickSecond}
+              className="inline-flex items-center justify-center gap-2 rounded-full glass py-3 text-sm font-semibold transition active:scale-[0.98]">
+              <Sparkles className="h-4 w-4" /> Choose 2nd
+            </button>
+            <button onClick={onShuffleOrder}
+              className="inline-flex items-center justify-center gap-2 rounded-full glass py-3 text-sm font-semibold transition active:scale-[0.98]">
+              <Shuffle className="h-4 w-4" /> Full order
+            </button>
+          </div>
+        )}
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+        className="space-y-2"
+      >
+        <p className="text-[11px] uppercase tracking-widest text-muted-foreground">How does it feel?</p>
         <div className="flex justify-center gap-2">
           <Feel emoji="😍" label="Love it" active={feedback === "love"} onClick={() => setFeedback("love")} />
           <Feel emoji="😐" label="Fine" active={feedback === "fine"} onClick={() => setFeedback("fine")} />
@@ -650,43 +713,10 @@ function Winner({ winner, mode, category, feedback, setFeedback, onAccept, onRed
           )}
         </AnimatePresence>
       </motion.div>
-
-      {isPlayers ? (
-        <div className="space-y-2 pt-2">
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={onPickSecond}
-              className="inline-flex items-center justify-center gap-2 rounded-full glass-strong py-4 text-sm font-semibold shadow-soft active:scale-95">
-              <Sparkles className="h-4 w-4" /> Choose 2nd player
-            </button>
-            <button onClick={onRedraw}
-              className="inline-flex items-center justify-center gap-2 rounded-full glass-strong py-4 text-sm font-semibold shadow-soft active:scale-95">
-              <RotateCcw className="h-4 w-4" /> Draw again
-            </button>
-          </div>
-          <button onClick={onShuffleOrder}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-semibold text-primary-foreground shadow-glow active:scale-95">
-            <Shuffle className="h-4 w-4" /> Shuffle full order
-          </button>
-          <button onClick={onAccept}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full glass py-3 text-sm font-semibold active:scale-95">
-            <Check className="h-4 w-4" /> Done
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2 pt-2">
-          <button onClick={onRedraw}
-            className="inline-flex items-center justify-center gap-2 rounded-full glass-strong py-4 text-sm font-semibold shadow-soft active:scale-95">
-            <RotateCcw className="h-4 w-4" /> Draw again
-          </button>
-          <button onClick={onAccept}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-semibold text-primary-foreground shadow-glow active:scale-95">
-            <Check className="h-4 w-4" /> Accept
-          </button>
-        </div>
-      )}
     </motion.div>
   );
 }
+
 
 function ProductivityTimer() {
   const [running, setRunning] = useState(false);
@@ -767,17 +797,20 @@ function Feel({ emoji, label, active, onClick }: { emoji: string; label: string;
 }
 
 function Confetti() {
-  const pieces = useMemo(() => Array.from({ length: 28 }, () => ({
-    left: Math.random() * 100,
-    delay: Math.random() * 0.5,
+  const reduced = typeof window !== "undefined"
+    && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const pieces = useMemo(() => Array.from({ length: 12 }, () => ({
+    left: 8 + Math.random() * 84,
+    delay: Math.random() * 0.7,
     color: Math.floor(Math.random() * 8) + 1,
-    size: 6 + Math.random() * 8,
+    size: 5 + Math.random() * 5,
   })), []);
+  if (reduced) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {pieces.map((p, i) => (
         <span key={i}
-          className="absolute bottom-0 animate-confetti"
+          className="absolute bottom-0 animate-confetti opacity-70"
           style={{
             left: `${p.left}%`,
             width: p.size, height: p.size,
@@ -790,6 +823,7 @@ function Confetti() {
     </div>
   );
 }
+
 
 function StatsView({ onBack }: { onBack: () => void }) {
   const [stats, setStats] = useState<Stats>({ total: 0, redraws: 0, productivity: 0, free: 0, picks: {} });
