@@ -361,6 +361,8 @@ export function RaffleMachine({ options, spinning, winner, onSpinComplete, shake
       // Winner sequence: gentle rise, then exit through the neck
       let winnerBall: Ball | null = null;
       for (let i = 0; i < n; i++) if (arr[i].isWinner) { winnerBall = arr[i]; break; }
+      (window as any).__dbg2 = { phase, nan: arr.filter(z => !Number.isFinite(z.x) || !Number.isFinite(z.y)).length, y: winnerBall?.y, rising: winnerBall?.rising, exiting: winnerBall?.exiting };
+
 
       if (st.spinning && phase >= 1 && winnerBall && !st.completed) {
         if (!winnerBall.rising && !winnerBall.exiting) {
