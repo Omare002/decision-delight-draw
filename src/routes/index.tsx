@@ -527,7 +527,7 @@ function Compose(props: {
         </div>
       )}
 
-      <div className="sticky bottom-4 space-y-2">
+      <div className="sticky bottom-0 -mx-4 space-y-2 bg-gradient-to-t from-background via-background/85 to-transparent px-4 pt-8 pb-4 sm:-mx-5 sm:px-5">
         {isPlayers && options.length >= 2 && (
           <button
             onClick={onShuffleOrder}
