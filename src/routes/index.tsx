@@ -309,7 +309,7 @@ function Home({ recent, onPickCategory, onLoadRecent }: {
         <p className="mt-2 text-sm text-muted-foreground">Pick a category — Spinit will pull the answer out of the drum.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 min-[380px]:gap-3">
         {CATEGORY_ORDER.map((c, i) => {
           const meta = CATEGORY_META[c];
           return (
@@ -320,15 +320,15 @@ function Home({ recent, onPickCategory, onLoadRecent }: {
               transition={{ delay: 0.05 + i * 0.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => onPickCategory(c)}
-              className="group relative overflow-hidden rounded-3xl glass-strong p-4 text-left shadow-soft transition hover:shadow-glow"
+              className="group relative overflow-hidden rounded-3xl glass-strong p-3.5 text-left shadow-soft transition hover:shadow-glow min-[380px]:p-4"
             >
               <motion.div
                 animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 2.4 + i * 0.2, repeat: Infinity }}
-                className="text-3xl"
+                className="text-2xl min-[380px]:text-3xl"
               >{meta.emoji}</motion.div>
-              <p className="mt-2 font-display text-base font-bold leading-tight">{meta.label}</p>
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{meta.tagline}</p>
+              <p className="mt-2 font-display text-sm font-bold leading-tight min-[380px]:text-base">{meta.label}</p>
+              <p className="mt-1 text-[10px] leading-snug text-muted-foreground min-[380px]:text-[11px]">{meta.tagline}</p>
             </motion.button>
           );
         })}
@@ -393,7 +393,7 @@ function Compose(props: {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-      className="space-y-5"
+      className="space-y-4 min-[380px]:space-y-5"
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -434,7 +434,7 @@ function Compose(props: {
       {meta.templates.length > 0 && meta.templates[0].items.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Quick templates</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
+          <div className="chip-rail -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 pr-8">
             {meta.templates.map((t) => (
               <button
                 key={t.name}
@@ -452,7 +452,7 @@ function Compose(props: {
         {options.length === 0 && (
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center text-sm text-muted-foreground"
+            className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground"
           >
             Your {isPlayers ? "players" : "options"} will appear here as colorful balls
           </motion.p>
@@ -490,16 +490,16 @@ function Compose(props: {
                 </button>
                 <StaticBall colorIndex={o.colorIndex} label={o.label} size={64} />
                 {!isPlayers && (
-                  <div className="mt-1 flex items-center gap-0.5 rounded-full bg-background/60 px-1 py-0.5 text-[10px] tabular-nums">
+                  <div className="mt-1.5 flex items-center gap-0.5 rounded-full bg-background/80 px-1 py-0.5 text-[11px] tabular-nums">
                     <button
                       onClick={() => bumpWeight(o.id, -1)}
-                      className="grid h-4 w-4 place-items-center text-muted-foreground"
+                      className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition active:scale-90 hover:bg-foreground/5"
                       aria-label="Decrease weight"
                     ><Minus className="h-2.5 w-2.5" /></button>
-                    <span className="w-5 text-center font-bold">{pct}%</span>
+                    <span className="w-8 text-center font-bold">{pct}%</span>
                     <button
                       onClick={() => bumpWeight(o.id, 1)}
-                      className="grid h-4 w-4 place-items-center text-muted-foreground"
+                      className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition active:scale-90 hover:bg-foreground/5"
                       aria-label="Increase weight"
                     ><Plus className="h-2.5 w-2.5" /></button>
                   </div>
@@ -511,7 +511,7 @@ function Compose(props: {
       </div>
 
       {options.length > 0 && (
-        <button onClick={clearAll} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive">
+        <button onClick={clearAll} className="-mx-3 inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs text-muted-foreground hover:text-destructive">
           <Trash2 className="h-3 w-3" /> Clear all
         </button>
       )}
@@ -843,7 +843,7 @@ function StatsView({ onBack }: { onBack: () => void }) {
       className="space-y-5 pt-2"
     >
       <h2 className="font-display text-3xl font-bold">Your stats</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 min-[380px]:gap-3">
         <Stat big label="Total draws" value={stats.total} />
         <Stat big label="Redraws" value={stats.redraws} />
         <Stat label="Productivity" value={stats.productivity} />
