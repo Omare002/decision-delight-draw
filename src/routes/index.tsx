@@ -204,7 +204,7 @@ function App() {
         onStats={() => setView("stats")}
         onBack={view !== "home" ? goHome : undefined}
       />
-      <main className="mx-auto max-w-md px-5 pb-20 pt-2">
+      <main className="mx-auto max-w-md px-4 pt-2 pb-[calc(8.5rem+env(safe-area-inset-bottom))] sm:px-5">
         <AnimatePresence mode="wait">
           {view === "home" && (
             <Home key="home" recent={recent} onPickCategory={openCategory} onLoadRecent={loadRecent} />
@@ -255,14 +255,14 @@ function TopBar({ theme, setTheme, sound, setSound, onStats, onBack }: {
   onStats: () => void; onBack?: () => void;
 }) {
   return (
-    <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between px-5 py-4">
+    <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between px-4 py-3 sm:px-5">
       <button
         onClick={onBack}
         className={`grid h-10 w-10 place-items-center rounded-full glass shadow-soft transition ${onBack ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         aria-label="Back"
       ><ArrowLeft className="h-4 w-4" /></button>
       <div className="font-display text-lg font-bold tracking-tight">spinit</div>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 min-[380px]:gap-2">
         <IconBtn onClick={onStats} label="Stats"><BarChart3 className="h-4 w-4" /></IconBtn>
         <IconBtn onClick={() => setSound(!sound)} label={sound ? "Mute" : "Unmute"}>
           {sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -278,7 +278,7 @@ function TopBar({ theme, setTheme, sound, setSound, onStats, onBack }: {
 function IconBtn({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
   return (
     <button onClick={onClick} aria-label={label}
-      className="grid h-10 w-10 place-items-center rounded-full glass shadow-soft transition active:scale-95">
+      className="grid h-9 w-9 place-items-center rounded-full glass shadow-soft transition active:scale-95 min-[380px]:h-10 min-[380px]:w-10">
       {children}
     </button>
   );

@@ -57,7 +57,7 @@
   --secondary: oklch(0.86 0.08 45);
   --secondary-foreground: oklch(0.28 0.08 40);
   --muted: oklch(0.86 0.05 55);
-  --muted-foreground: oklch(0.45 0.08 35);
+  --muted-foreground: oklch(0.44 0.09 35);
   --accent: oklch(0.72 0.2 35);                 /* burnt amber */
   --accent-foreground: oklch(0.22 0.06 40);
   --destructive: oklch(0.55 0.22 20);
@@ -96,7 +96,7 @@
   --secondary: oklch(0.3 0.1 340);
   --secondary-foreground: oklch(0.95 0.04 40);
   --muted: oklch(0.24 0.08 320);
-  --muted-foreground: oklch(0.8 0.08 40);
+  --muted-foreground: oklch(0.85 0.055 40);
   --accent: oklch(0.78 0.2 45);                 /* amber sunset */
   --accent-foreground: oklch(0.14 0.06 320);
   --destructive: oklch(0.7 0.28 25);
@@ -170,6 +170,11 @@
   background: var(--surface-strong);
   border: 2px solid var(--surface-border);
   box-shadow: var(--surface-edge-strong);
+}
+
+/* Horizontally scrolling chip rail with a soft fade at the trailing edge */
+@utility chip-rail {
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
 }
 
 @utility bg-hero {
