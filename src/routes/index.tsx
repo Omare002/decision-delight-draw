@@ -204,7 +204,7 @@ function App() {
         onStats={() => setView("stats")}
         onBack={view !== "home" ? goHome : undefined}
       />
-      <main className="mx-auto max-w-md px-4 pt-2 pb-[calc(8.5rem+env(safe-area-inset-bottom))] sm:px-5">
+      <main className="mx-auto max-w-md px-4 pt-2 pb-[calc(3rem+env(safe-area-inset-bottom))] sm:px-5">
         <AnimatePresence mode="wait">
           {view === "home" && (
             <Home key="home" recent={recent} onPickCategory={openCategory} onLoadRecent={loadRecent} />
@@ -255,7 +255,7 @@ function TopBar({ theme, setTheme, sound, setSound, onStats, onBack }: {
   onStats: () => void; onBack?: () => void;
 }) {
   return (
-    <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between px-4 py-3 sm:px-5">
+    <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between bg-gradient-to-b from-background via-background/85 to-transparent px-4 pb-6 pt-3 sm:px-5">
       <button
         onClick={onBack}
         className={`grid h-9 w-9 place-items-center rounded-full glass shadow-soft transition min-[380px]:h-10 min-[380px]:w-10 ${onBack ? "opacity-100" : "opacity-0 pointer-events-none"}`}
