@@ -460,7 +460,7 @@ function Compose(props: {
       </AnimatePresence>
 
       {/* Visual balls — list scrolls, machine stays fixed */}
-      <div className="flex max-h-[42vh] flex-wrap items-end gap-x-3 gap-y-4 overflow-y-auto overscroll-contain pr-1">
+      <div className="flex max-h-[42vh] flex-wrap items-end justify-center gap-x-3 gap-y-4 overflow-y-auto overscroll-contain pr-1">
 
         <AnimatePresence>
           {options.map((o, i) => {
@@ -490,13 +490,13 @@ function Compose(props: {
                 </button>
                 <StaticBall colorIndex={o.colorIndex} label={o.label} size={64} />
                 {!isPlayers && (
-                  <div className="mt-1.5 flex items-center gap-0.5 rounded-full bg-background/80 px-1 py-0.5 text-[11px] tabular-nums">
+                  <div className="mt-1.5 flex items-center gap-0 rounded-full bg-background/80 px-0.5 py-0.5 text-[11px] tabular-nums">
                     <button
                       onClick={() => bumpWeight(o.id, -1)}
                       className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition active:scale-90 hover:bg-foreground/5"
                       aria-label="Decrease weight"
                     ><Minus className="h-2.5 w-2.5" /></button>
-                    <span className="w-8 text-center font-bold">{pct}%</span>
+                    <span className="w-6 text-center font-bold">{pct}%</span>
                     <button
                       onClick={() => bumpWeight(o.id, 1)}
                       className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition active:scale-90 hover:bg-foreground/5"
@@ -873,7 +873,7 @@ function StatsView({ onBack }: { onBack: () => void }) {
       </div>
       <div className="flex gap-2">
         <button onClick={onBack} className="flex-1 rounded-full glass-strong py-3 text-sm font-semibold active:scale-95">Back</button>
-        <button onClick={reset} className="flex-1 rounded-full bg-destructive/10 py-3 text-sm font-semibold text-destructive active:scale-95">Reset</button>
+        <button onClick={reset} className="flex-1 rounded-full border border-destructive/45 bg-destructive/10 py-3 text-sm font-semibold text-destructive active:scale-95">Reset</button>
       </div>
     </motion.div>
   );
