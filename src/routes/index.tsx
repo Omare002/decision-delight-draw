@@ -330,7 +330,7 @@ function Home({ recent, onPickCategory, onLoadRecent }: {
               <p className="mt-2 min-h-[2.3em] font-display text-[15px] leading-[1.15] tracking-[0.01em] text-balance [text-shadow:none] min-[380px]:text-base">
                 {meta.label}
               </p>
-              <p className="mt-1 line-clamp-3 min-h-[4.35em] text-[11px] font-medium leading-[1.45] text-foreground/70 min-[380px]:line-clamp-2 min-[380px]:min-h-[2.9em] min-[380px]:text-xs">
+              <p className="mt-1 line-clamp-3 min-h-[4.35em] text-[11px] font-medium leading-[1.45] text-pretty text-foreground/70 min-[380px]:line-clamp-2 min-[380px]:min-h-[2.9em] min-[380px]:text-xs">
                 {meta.tagline}
               </p>
             </motion.button>
