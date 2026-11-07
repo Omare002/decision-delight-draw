@@ -42,16 +42,22 @@
   /* Warm dusty sunset paper */
   --background: oklch(0.9 0.05 55);
   --foreground: oklch(0.24 0.06 40);
-  --card: oklch(0.94 0.045 60);
+  --card: oklch(0.955 0.04 68);
   --card-foreground: oklch(0.24 0.06 40);
-  --popover: oklch(0.94 0.045 60);
+  --popover: oklch(0.955 0.04 68);
   --popover-foreground: oklch(0.24 0.06 40);
+  /* Solid warm card surfaces (no translucency) */
+  --surface: oklch(0.95 0.042 66);
+  --surface-strong: oklch(0.972 0.034 70);
+  --surface-border: oklch(0.42 0.11 35 / 0.38);
+  --surface-edge: inset 0 1px 0 oklch(1 0 0 / 0.55);
+  --surface-edge-strong: inset 0 1px 0 oklch(1 0 0 / 0.7);
   --primary: oklch(0.58 0.19 25);               /* sunset coral */
   --primary-foreground: oklch(0.97 0.02 60);
   --secondary: oklch(0.86 0.08 45);
   --secondary-foreground: oklch(0.28 0.08 40);
   --muted: oklch(0.86 0.05 55);
-  --muted-foreground: oklch(0.45 0.08 35);
+  --muted-foreground: oklch(0.44 0.09 35);
   --accent: oklch(0.72 0.2 35);                 /* burnt amber */
   --accent-foreground: oklch(0.22 0.06 40);
   --destructive: oklch(0.55 0.22 20);
@@ -63,12 +69,12 @@
   /* Retro wallpaper background — warm overlay for legibility */
   --hero-image: url("/__l5e/assets-v1/29741da6-167f-41e2-b1d6-7caf20ef56eb/retro-bg.jpg");
   --gradient-hero:
-    linear-gradient(180deg, oklch(0.96 0.04 60 / 0.72) 0%, oklch(0.88 0.08 40 / 0.62) 100%),
+    linear-gradient(180deg, oklch(0.93 0.05 62 / 0.9) 0%, oklch(0.85 0.08 42 / 0.93) 100%),
     var(--hero-image);
-  --gradient-machine: linear-gradient(180deg, oklch(0.97 0.04 55 / 0.7), oklch(0.75 0.1 30 / 0.5));
-  --shadow-soft: 0 8px 24px -8px oklch(0.28 0.08 30 / 0.45), 0 2px 0 oklch(0.28 0.08 30 / 0.15);
-  --shadow-glow: 0 0 60px oklch(0.72 0.24 20 / 0.55), 0 0 20px oklch(0.5 0.2 350 / 0.35);
-  --paper-noise: 0.7;
+  --gradient-machine: linear-gradient(180deg, oklch(0.96 0.04 58 / 0.94), oklch(0.78 0.1 32 / 0.88));
+  --shadow-soft: 0 10px 26px -14px oklch(0.3 0.09 30 / 0.5), 0 2px 0 oklch(0.28 0.08 30 / 0.12);
+  --shadow-glow: 0 0 50px oklch(0.72 0.24 20 / 0.45), 0 0 18px oklch(0.5 0.2 350 / 0.28);
+  --paper-noise: 0.32;
   --scanlines: 0;
 }
 
@@ -76,16 +82,21 @@
 .dark {
   --background: oklch(0.14 0.06 320);
   --foreground: oklch(0.95 0.04 40);
-  --card: oklch(0.2 0.08 320);
+  --card: oklch(0.21 0.07 320);
   --card-foreground: oklch(0.95 0.04 40);
-  --popover: oklch(0.2 0.08 320);
+  --popover: oklch(0.21 0.07 320);
   --popover-foreground: oklch(0.95 0.04 40);
+  --surface: oklch(0.215 0.07 320);
+  --surface-strong: oklch(0.255 0.085 322);
+  --surface-border: oklch(0.78 0.16 15 / 0.34);
+  --surface-edge: inset 0 1px 0 oklch(1 0 0 / 0.09);
+  --surface-edge-strong: inset 0 1px 0 oklch(1 0 0 / 0.13);
   --primary: oklch(0.68 0.28 5);                /* hot pink-coral */
   --primary-foreground: oklch(0.14 0.06 320);
   --secondary: oklch(0.3 0.1 340);
   --secondary-foreground: oklch(0.95 0.04 40);
   --muted: oklch(0.24 0.08 320);
-  --muted-foreground: oklch(0.8 0.08 40);
+  --muted-foreground: oklch(0.85 0.055 40);
   --accent: oklch(0.78 0.2 45);                 /* amber sunset */
   --accent-foreground: oklch(0.14 0.06 320);
   --destructive: oklch(0.7 0.28 25);
@@ -95,13 +106,13 @@
   --ring: oklch(0.68 0.28 5);
 
   --gradient-hero:
-    linear-gradient(180deg, oklch(0.14 0.08 320 / 0.7) 0%, oklch(0.1 0.06 300 / 0.82) 100%),
+    linear-gradient(180deg, oklch(0.13 0.07 320 / 0.92) 0%, oklch(0.09 0.05 300 / 0.95) 100%),
     var(--hero-image);
-  --gradient-machine: linear-gradient(180deg, oklch(0.3 0.12 340 / 0.55), oklch(0.15 0.06 310 / 0.4));
-  --shadow-soft: 0 10px 40px -10px oklch(0.68 0.28 5 / 0.55);
-  --shadow-glow: 0 0 60px oklch(0.68 0.28 5 / 0.7), 0 0 24px oklch(0.78 0.2 45 / 0.4);
+  --gradient-machine: linear-gradient(180deg, oklch(0.32 0.12 340 / 0.9), oklch(0.16 0.06 310 / 0.88));
+  --shadow-soft: 0 12px 34px -16px oklch(0.68 0.28 5 / 0.6);
+  --shadow-glow: 0 0 50px oklch(0.68 0.28 5 / 0.6), 0 0 20px oklch(0.78 0.2 45 / 0.32);
   --paper-noise: 0;
-  --scanlines: 1;
+  --scanlines: 0.45;
 }
 
 
@@ -123,10 +134,10 @@
     inset: 0;
     pointer-events: none;
     z-index: 1;
-    /* paper grain */
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.1  0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/></svg>");
+    /* paper grain — coarse and calm */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.1  0 0 0 0.35 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.22'/></svg>");
     mix-blend-mode: multiply;
-    opacity: calc(var(--paper-noise) * 0.5);
+    opacity: calc(var(--paper-noise) * 0.45);
   }
   body::after {
     content: "";
@@ -139,7 +150,7 @@
       to bottom,
       transparent 0,
       transparent 2px,
-      oklch(0 0 0 / 0.25) 3px,
+      oklch(0 0 0 / 0.18) 3px,
       transparent 4px
     );
     opacity: calc(var(--scanlines) * 0.35);
@@ -150,16 +161,20 @@
 }
 
 @utility glass {
-  background: color-mix(in oklab, var(--card) 70%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  border: 1.5px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+  background: var(--surface);
+  border: 1.5px solid var(--surface-border);
+  box-shadow: var(--surface-edge);
 }
 
 @utility glass-strong {
-  background: color-mix(in oklab, var(--card) 90%, transparent);
-  backdrop-filter: blur(18px) saturate(160%);
-  border: 2px solid color-mix(in oklab, var(--foreground) 18%, transparent);
-  box-shadow: inset 0 -3px 0 color-mix(in oklab, var(--foreground) 12%, transparent);
+  background: var(--surface-strong);
+  border: 2px solid var(--surface-border);
+  box-shadow: var(--surface-edge-strong);
+}
+
+/* Horizontally scrolling chip rail with a soft fade at the trailing edge */
+@utility chip-rail {
+  mask-image: linear-gradient(to right, #000 0, #000 calc(100% - 26px), transparent 100%);
 }
 
 @utility bg-hero {

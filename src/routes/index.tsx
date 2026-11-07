@@ -204,7 +204,7 @@ function App() {
         onStats={() => setView("stats")}
         onBack={view !== "home" ? goHome : undefined}
       />
-      <main className="mx-auto max-w-md px-5 pb-20 pt-2">
+      <main className="mx-auto max-w-md px-4 pt-2 pb-[calc(3rem+env(safe-area-inset-bottom))] sm:px-5">
         <AnimatePresence mode="wait">
           {view === "home" && (
             <Home key="home" recent={recent} onPickCategory={openCategory} onLoadRecent={loadRecent} />
@@ -255,14 +255,14 @@ function TopBar({ theme, setTheme, sound, setSound, onStats, onBack }: {
   onStats: () => void; onBack?: () => void;
 }) {
   return (
-    <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between px-5 py-4">
+    <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between bg-gradient-to-b from-background via-background/85 to-transparent px-4 pb-6 pt-3 sm:px-5">
       <button
         onClick={onBack}
-        className={`grid h-10 w-10 place-items-center rounded-full glass shadow-soft transition ${onBack ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`grid h-9 w-9 place-items-center rounded-full glass shadow-soft transition min-[380px]:h-10 min-[380px]:w-10 ${onBack ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         aria-label="Back"
       ><ArrowLeft className="h-4 w-4" /></button>
       <div className="font-display text-lg font-bold tracking-tight">spinit</div>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 min-[380px]:gap-2">
         <IconBtn onClick={onStats} label="Stats"><BarChart3 className="h-4 w-4" /></IconBtn>
         <IconBtn onClick={() => setSound(!sound)} label={sound ? "Mute" : "Unmute"}>
           {sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
@@ -278,7 +278,7 @@ function TopBar({ theme, setTheme, sound, setSound, onStats, onBack }: {
 function IconBtn({ children, onClick, label }: { children: React.ReactNode; onClick: () => void; label: string }) {
   return (
     <button onClick={onClick} aria-label={label}
-      className="grid h-10 w-10 place-items-center rounded-full glass shadow-soft transition active:scale-95">
+      className="grid h-9 w-9 place-items-center rounded-full glass shadow-soft transition active:scale-95 min-[380px]:h-10 min-[380px]:w-10">
       {children}
     </button>
   );
@@ -309,7 +309,7 @@ function Home({ recent, onPickCategory, onLoadRecent }: {
         <p className="mt-2 text-sm text-muted-foreground">Pick a category — Spinit will pull the answer out of the drum.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 min-[380px]:gap-3">
         {CATEGORY_ORDER.map((c, i) => {
           const meta = CATEGORY_META[c];
           return (
@@ -320,15 +320,15 @@ function Home({ recent, onPickCategory, onLoadRecent }: {
               transition={{ delay: 0.05 + i * 0.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => onPickCategory(c)}
-              className="group relative overflow-hidden rounded-3xl glass-strong p-4 text-left shadow-soft transition hover:shadow-glow"
+              className="group relative overflow-hidden rounded-3xl glass-strong p-3.5 text-left shadow-soft transition hover:shadow-glow min-[380px]:p-4"
             >
               <motion.div
                 animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 2.4 + i * 0.2, repeat: Infinity }}
-                className="text-3xl"
+                className="text-2xl min-[380px]:text-3xl"
               >{meta.emoji}</motion.div>
-              <p className="mt-2 font-display text-base font-bold leading-tight">{meta.label}</p>
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground">{meta.tagline}</p>
+              <p className="mt-2 font-display text-sm font-bold leading-tight min-[380px]:text-base">{meta.label}</p>
+              <p className="mt-1 text-[10px] leading-snug text-muted-foreground min-[380px]:text-[11px]">{meta.tagline}</p>
             </motion.button>
           );
         })}
@@ -393,7 +393,7 @@ function Compose(props: {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-      className="space-y-5"
+      className="space-y-4 min-[380px]:space-y-5"
     >
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -413,7 +413,7 @@ function Compose(props: {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder={isPlayers ? "Player name…" : `e.g. ${placeholder}`}
-            className="flex-1 bg-transparent px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60"
+            className="flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-muted-foreground/80 min-[380px]:px-4"
             maxLength={40}
             autoComplete="off"
             autoCorrect="off"
@@ -434,7 +434,7 @@ function Compose(props: {
       {meta.templates.length > 0 && meta.templates[0].items.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Quick templates</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x">
+          <div className="chip-rail -mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1 pr-8">
             {meta.templates.map((t) => (
               <button
                 key={t.name}
@@ -452,7 +452,7 @@ function Compose(props: {
         {options.length === 0 && (
           <motion.p
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="rounded-2xl border border-dashed border-border/60 px-4 py-8 text-center text-sm text-muted-foreground"
+            className="rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground"
           >
             Your {isPlayers ? "players" : "options"} will appear here as colorful balls
           </motion.p>
@@ -460,7 +460,7 @@ function Compose(props: {
       </AnimatePresence>
 
       {/* Visual balls — list scrolls, machine stays fixed */}
-      <div className="flex max-h-[42vh] flex-wrap items-end gap-x-3 gap-y-4 overflow-y-auto overscroll-contain pr-1">
+      <div className="flex max-h-[42vh] flex-wrap items-end justify-center gap-x-3 gap-y-4 overflow-y-auto overscroll-contain pr-1">
 
         <AnimatePresence>
           {options.map((o, i) => {
@@ -490,16 +490,16 @@ function Compose(props: {
                 </button>
                 <StaticBall colorIndex={o.colorIndex} label={o.label} size={64} />
                 {!isPlayers && (
-                  <div className="mt-1 flex items-center gap-0.5 rounded-full bg-background/60 px-1 py-0.5 text-[10px] tabular-nums">
+                  <div className="mt-1.5 flex items-center gap-0 rounded-full bg-background/80 px-0.5 py-0.5 text-[11px] tabular-nums">
                     <button
                       onClick={() => bumpWeight(o.id, -1)}
-                      className="grid h-4 w-4 place-items-center text-muted-foreground"
+                      className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition active:scale-90 hover:bg-foreground/5"
                       aria-label="Decrease weight"
                     ><Minus className="h-2.5 w-2.5" /></button>
-                    <span className="w-5 text-center font-bold">{pct}%</span>
+                    <span className="w-6 text-center font-bold">{pct}%</span>
                     <button
                       onClick={() => bumpWeight(o.id, 1)}
-                      className="grid h-4 w-4 place-items-center text-muted-foreground"
+                      className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground transition active:scale-90 hover:bg-foreground/5"
                       aria-label="Increase weight"
                     ><Plus className="h-2.5 w-2.5" /></button>
                   </div>
@@ -511,7 +511,7 @@ function Compose(props: {
       </div>
 
       {options.length > 0 && (
-        <button onClick={clearAll} className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive">
+        <button onClick={clearAll} className="-mx-3 inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs text-muted-foreground hover:text-destructive">
           <Trash2 className="h-3 w-3" /> Clear all
         </button>
       )}
@@ -527,7 +527,7 @@ function Compose(props: {
         </div>
       )}
 
-      <div className="sticky bottom-4 space-y-2">
+      <div className="sticky bottom-0 -mx-4 space-y-2 bg-gradient-to-t from-background via-background/85 to-transparent px-4 pt-8 pb-4 sm:-mx-5 sm:px-5">
         {isPlayers && options.length >= 2 && (
           <button
             onClick={onShuffleOrder}
@@ -570,7 +570,7 @@ function Spin({ category, options, spinning, winner, onSpin, onSpinComplete, sha
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-      className="flex flex-col items-center gap-8 pt-6"
+      className="flex flex-col items-center gap-6 pt-4 min-[380px]:gap-8 min-[380px]:pt-6"
     >
       <div className="text-center">
         <p className="text-sm uppercase tracking-widest text-muted-foreground">{spinning ? "Drawing…" : "Ready"}</p>
@@ -628,7 +628,7 @@ function Winner({ winner, mode, category, feedback, setFeedback, onAccept, onRed
     <motion.div
       initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
       transition={spring}
-      className="relative flex min-h-[70vh] flex-col justify-center space-y-7 pt-6 text-center"
+      className="relative flex min-h-[70vh] flex-col justify-center space-y-5 pt-4 text-center min-[380px]:space-y-7 min-[380px]:pt-6"
     >
       <Confetti />
 
@@ -789,7 +789,7 @@ function OrderView({ order, onReshuffle, onDone }: { order: Option[]; onReshuffl
 function Feel({ emoji, label, active, onClick }: { emoji: string; label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className={`flex flex-col items-center gap-1 rounded-2xl px-4 py-2 transition active:scale-95 ${active ? "bg-primary text-primary-foreground shadow-soft" : "glass"}`}>
+      className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2 transition active:scale-95 min-[380px]:px-4 ${active ? "bg-primary text-primary-foreground shadow-soft" : "glass"}`}>
       <span className="text-2xl">{emoji}</span>
       <span className="text-[11px] font-medium">{label}</span>
     </button>
@@ -843,13 +843,13 @@ function StatsView({ onBack }: { onBack: () => void }) {
       className="space-y-5 pt-2"
     >
       <h2 className="font-display text-3xl font-bold">Your stats</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2.5 min-[380px]:gap-3">
         <Stat big label="Total draws" value={stats.total} />
         <Stat big label="Redraws" value={stats.redraws} />
         <Stat label="Productivity" value={stats.productivity} />
         <Stat label="Free choice" value={stats.free} />
       </div>
-      <div className="glass rounded-3xl p-5 shadow-soft">
+      <div className="glass rounded-3xl p-4 shadow-soft min-[380px]:p-5">
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Most picked</p>
         <p className="mt-1 font-display text-2xl font-bold truncate">{mostPicked}</p>
         {top.length > 0 && (
@@ -873,7 +873,7 @@ function StatsView({ onBack }: { onBack: () => void }) {
       </div>
       <div className="flex gap-2">
         <button onClick={onBack} className="flex-1 rounded-full glass-strong py-3 text-sm font-semibold active:scale-95">Back</button>
-        <button onClick={reset} className="flex-1 rounded-full bg-destructive/10 py-3 text-sm font-semibold text-destructive active:scale-95">Reset</button>
+        <button onClick={reset} className="flex-1 rounded-full border border-destructive/45 bg-destructive/10 py-3 text-sm font-semibold text-destructive active:scale-95">Reset</button>
       </div>
     </motion.div>
   );
@@ -881,7 +881,7 @@ function StatsView({ onBack }: { onBack: () => void }) {
 
 function Stat({ label, value, big }: { label: string; value: number; big?: boolean }) {
   return (
-    <div className="glass rounded-3xl p-5 shadow-soft">
+    <div className="glass rounded-3xl p-4 shadow-soft min-[380px]:p-5">
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className={`mt-1 font-display font-bold tabular-nums ${big ? "text-4xl" : "text-2xl"}`}>{value}</p>
     </div>
