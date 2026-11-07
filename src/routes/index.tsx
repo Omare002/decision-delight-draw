@@ -258,7 +258,7 @@ function TopBar({ theme, setTheme, sound, setSound, onStats, onBack }: {
     <div className="sticky top-0 z-10 mx-auto flex max-w-md items-center justify-between px-4 py-3 sm:px-5">
       <button
         onClick={onBack}
-        className={`grid h-10 w-10 place-items-center rounded-full glass shadow-soft transition ${onBack ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`grid h-9 w-9 place-items-center rounded-full glass shadow-soft transition min-[380px]:h-10 min-[380px]:w-10 ${onBack ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         aria-label="Back"
       ><ArrowLeft className="h-4 w-4" /></button>
       <div className="font-display text-lg font-bold tracking-tight">spinit</div>
@@ -413,7 +413,7 @@ function Compose(props: {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder={isPlayers ? "Player name…" : `e.g. ${placeholder}`}
-            className="flex-1 bg-transparent px-4 py-3 text-base outline-none placeholder:text-muted-foreground/60"
+            className="flex-1 bg-transparent px-3 py-3 text-base outline-none placeholder:text-muted-foreground/80 min-[380px]:px-4"
             maxLength={40}
             autoComplete="off"
             autoCorrect="off"
@@ -570,7 +570,7 @@ function Spin({ category, options, spinning, winner, onSpin, onSpinComplete, sha
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-      className="flex flex-col items-center gap-8 pt-6"
+      className="flex flex-col items-center gap-6 pt-4 min-[380px]:gap-8 min-[380px]:pt-6"
     >
       <div className="text-center">
         <p className="text-sm uppercase tracking-widest text-muted-foreground">{spinning ? "Drawing…" : "Ready"}</p>
@@ -628,7 +628,7 @@ function Winner({ winner, mode, category, feedback, setFeedback, onAccept, onRed
     <motion.div
       initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
       transition={spring}
-      className="relative flex min-h-[70vh] flex-col justify-center space-y-7 pt-6 text-center"
+      className="relative flex min-h-[70vh] flex-col justify-center space-y-5 pt-4 text-center min-[380px]:space-y-7 min-[380px]:pt-6"
     >
       <Confetti />
 
@@ -789,7 +789,7 @@ function OrderView({ order, onReshuffle, onDone }: { order: Option[]; onReshuffl
 function Feel({ emoji, label, active, onClick }: { emoji: string; label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
-      className={`flex flex-col items-center gap-1 rounded-2xl px-4 py-2 transition active:scale-95 ${active ? "bg-primary text-primary-foreground shadow-soft" : "glass"}`}>
+      className={`flex flex-col items-center gap-1 rounded-2xl px-3 py-2 transition active:scale-95 min-[380px]:px-4 ${active ? "bg-primary text-primary-foreground shadow-soft" : "glass"}`}>
       <span className="text-2xl">{emoji}</span>
       <span className="text-[11px] font-medium">{label}</span>
     </button>
@@ -849,7 +849,7 @@ function StatsView({ onBack }: { onBack: () => void }) {
         <Stat label="Productivity" value={stats.productivity} />
         <Stat label="Free choice" value={stats.free} />
       </div>
-      <div className="glass rounded-3xl p-5 shadow-soft">
+      <div className="glass rounded-3xl p-4 shadow-soft min-[380px]:p-5">
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Most picked</p>
         <p className="mt-1 font-display text-2xl font-bold truncate">{mostPicked}</p>
         {top.length > 0 && (
@@ -881,7 +881,7 @@ function StatsView({ onBack }: { onBack: () => void }) {
 
 function Stat({ label, value, big }: { label: string; value: number; big?: boolean }) {
   return (
-    <div className="glass rounded-3xl p-5 shadow-soft">
+    <div className="glass rounded-3xl p-4 shadow-soft min-[380px]:p-5">
       <p className="text-xs uppercase tracking-widest text-muted-foreground">{label}</p>
       <p className={`mt-1 font-display font-bold tabular-nums ${big ? "text-4xl" : "text-2xl"}`}>{value}</p>
     </div>
