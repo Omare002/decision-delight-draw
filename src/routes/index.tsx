@@ -320,15 +320,19 @@ function Home({ recent, onPickCategory, onLoadRecent }: {
               transition={{ delay: 0.05 + i * 0.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => onPickCategory(c)}
-              className="group relative overflow-hidden rounded-3xl glass-strong p-3.5 text-left shadow-soft transition hover:shadow-glow min-[380px]:p-4"
+              className="group relative flex h-full flex-col overflow-hidden rounded-3xl glass-strong p-3.5 text-left shadow-soft transition hover:shadow-glow min-[380px]:p-4"
             >
               <motion.div
                 animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 2.4 + i * 0.2, repeat: Infinity }}
                 className="text-2xl min-[380px]:text-3xl"
               >{meta.emoji}</motion.div>
-              <p className="mt-2 font-display text-sm font-bold leading-tight min-[380px]:text-base">{meta.label}</p>
-              <p className="mt-1 text-[10px] leading-snug text-muted-foreground min-[380px]:text-[11px]">{meta.tagline}</p>
+              <p className="mt-2 min-h-[2.3em] font-display text-[15px] leading-[1.15] tracking-[0.01em] text-balance [text-shadow:none] min-[380px]:text-base">
+                {meta.label}
+              </p>
+              <p className="mt-1 line-clamp-2 text-[11px] font-medium leading-[1.45] text-foreground/70 min-[380px]:text-xs">
+                {meta.tagline}
+              </p>
             </motion.button>
           );
         })}
